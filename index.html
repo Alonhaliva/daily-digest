@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Daily Digest – Your news, beautifully illustrated</title>
+  <meta name="description" content="Daily Digest brings you today's top stories in AI & Tech, Markets, Geopolitics, and more — beautifully illustrated every day."/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --navy:#0d1117;--pink:#ff2d78;--violet:#7c3aed;--vl:#a78bfa;
+      --bg:#f0f2f7;--sur:#fff;--sur2:#f8f9fc;--bdr:#e5e7eb;
+      --tx:#0d1117;--tx2:#6b7280;--tx3:#9ca3af;
+      --sh:0 4px 24px rgba(0,0,0,.07);--sh2:0 16px 48px rgba(0,0,0,.14)
+    }
+    [data-theme=dark]{
+      --bg:#0a0d14;--sur:#131720;--sur2:#1a2030;--bdr:#252d3d;
+      --tx:#e8eaf0;--tx2:#8892a4;--tx3:#4b5568;
+      --sh:0 4px 24px rgba(0,0,0,.3);--sh2:0 16px 48px rgba(0,0,0,.5)
+    }
+    html{scroll-behavior:smooth}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;transition:background .3s,color .3s}
+
+    /* PROGRESS */
+    #prog{position:fixed;top:0;left:0;height:3px;background:linear-gradient(to right,var(--pink),var(--violet));width:0%;z-index:9999;pointer-events:none}
+
+    /* TICKER — sits BELOW the sticky header via margin-top trick */
+    .ticker-wrap{
+      background:var(--navy);
+      height:34px;
+      display:flex;
+      align-items:center;
+      overflow:hidden;
+      /* NOT sticky — scrolls with page */
+    }
+    [data-theme=dark] .ticker-wrap{background:#0d0f17;border-bottom:1px solid var(--bdr)}
+    .ticker-label{
+      background:var(--pink);color:#fff;
+      font-size:.66rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;
+      padding:0 13px;height:100%;display:flex;align-items:center;white-space:nowrap;flex-shrink:0;z-index:2
+    }
+    .ticker-track{display:flex;animation:tick 50s linear infinite;white-space:nowrap}
+    .ticker-track:hover{animation-play-state:paused}
+    .ticker-item{color:#d1d5db;font-size:.73rem;padding:0 30px}
+    .ticker-item em{color:var(--pink);font-style:normal;margin-right:6px}
+    @keyframes tick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+    /* HEADER — sticky, sits on top */
+    header{
+      background:var(--navy);
+      padding:16px 24px;
+      position:sticky;
+      top:0;          /* sticks at very top */
+      z-index:200;
+      box-shadow:0 2px 20px rgba(0,0,0,.45)
+    }
+    .hi{max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:14px}
+    .logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none}
+    .logo-sq{width:28px;height:28px;background:var(--pink);border-radius:6px;flex-shrink:0}
+    .logo-txt{font-family:'Bebas Neue',sans-serif;font-size:1.9rem;letter-spacing:.06em;color:var(--pink);line-height:1}
+    .hr{display:flex;align-items:center;gap:9px}
+    .tagline{color:#9ca3af;font-size:.74rem;letter-spacing:.04em}
+    @media(max-width:580px){.tagline{display:none}}
+    .btn-sub{background:var(--pink);color:#fff;border:none;border-radius:999px;padding:7px 16px;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:opacity .18s,transform .18s}
+    .btn-sub:hover{opacity:.88;transform:translateY(-1px)}
+    @media(max-width:400px){.btn-sub{display:none}}
+    .btn-theme{background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.14);border-radius:50%;color:#fff;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.95rem;transition:background .2s,transform .25s;flex-shrink:0}
+    .btn-theme:hover{background:rgba(255,255,255,.16);transform:rotate(22deg)}
+
+    /* FILTER BAR */
+    .fbar{background:var(--sur);border-bottom:1px solid var(--bdr);padding:10px 24px;display:flex;align-items:center;gap:8px;overflow-x:auto;scrollbar-width:none;transition:background .3s}
+    .fbar::-webkit-scrollbar{display:none}
+    .flbl{font-weight:600;font-size:.77rem;color:var(--tx2);white-space:nowrap;margin-right:3px}
+    .pill{display:inline-flex;align-items:center;gap:5px;padding:5px 14px;border-radius:999px;border:1.5px solid var(--bdr);background:transparent;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:500;cursor:pointer;white-space:nowrap;transition:all .18s;color:var(--tx)}
+    .pill:hover{border-color:var(--violet);color:var(--violet);transform:translateY(-1px)}
+    .pill.on{background:var(--navy);border-color:var(--navy);color:#fff}
+    [data-theme=dark] .pill.on{background:var(--pink);border-color:var(--pink)}
+
+    /* LAYOUT */
+    .wrap{max-width:1280px;margin:0 auto;padding:30px 24px 80px;display:grid;grid-template-columns:1fr 296px;gap:34px;align-items:start}
+    @media(max-width:1024px){.wrap{grid-template-columns:1fr}.sidebar{display:none}}
+
+    /* SECTION HEADER */
+    .sh{display:flex;align-items:center;gap:11px;margin-bottom:16px}
+    .si{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.25rem}
+    .si.tech{background:linear-gradient(135deg,#6366f1,#8b5cf6)}
+    .si.mkt{background:linear-gradient(135deg,#f59e0b,#ef4444)}
+    .si.geo{background:linear-gradient(135deg,#10b981,#3b82f6)}
+    .si.fash{background:linear-gradient(135deg,#f472b6,#a78bfa)}
+    .stitle{font-family:'Bebas Neue',sans-serif;font-size:1.75rem;letter-spacing:.05em;color:var(--tx)}
+
+    /* CARDS */
+    .cgrid{display:grid;gap:17px;margin-bottom:44px}
+    .crow{display:grid;grid-template-columns:1fr 1fr;gap:17px}
+    @media(max-width:540px){.crow{grid-template-columns:1fr}}
+
+    .card-hero{display:grid;grid-template-columns:1fr 1fr;background:var(--sur);border-radius:18px;overflow:hidden;box-shadow:var(--sh);transition:transform .22s,box-shadow .22s;border:1px solid var(--bdr)}
+    .card-hero:hover{transform:translateY(-4px);box-shadow:var(--sh2)}
+    @media(max-width:600px){.card-hero{grid-template-columns:1fr}}
+
+    .iw{position:relative;overflow:hidden}
+    .card-hero .iw{min-height:280px}
+    @media(max-width:600px){.card-hero .iw{min-height:200px}}
+    .cs .iw{height:170px}
+    .iw img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .45s}
+    .card-hero:hover .iw img,.cs:hover .iw img{transform:scale(1.05)}
+
+    .bdg{position:absolute;top:12px;left:12px;color:#fff;font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:3px 9px;border-radius:5px}
+    .bdg.t{background:var(--violet)}.bdg.m{background:#d97706}.bdg.g{background:#059669}.bdg.f{background:#db2777}
+
+    .cb{padding:26px 26px 20px;display:flex;flex-direction:column;justify-content:space-between}
+    @media(max-width:600px){.cb{padding:16px}}
+    .cs .cb{padding:16px 18px 14px}
+
+    .cmeta{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+    .src{font-size:.64rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--tx2)}
+    .rt{font-size:.63rem;color:var(--tx3);background:var(--sur2);padding:2px 7px;border-radius:999px;border:1px solid var(--bdr)}
+
+    .ctitle{font-family:'DM Serif Display',serif;font-size:1.32rem;line-height:1.28;color:var(--tx);margin-bottom:10px;transition:color .18s}
+    .card-hero:hover .ctitle,.cs:hover .ctitle{color:var(--violet)}
+    [data-theme=dark] .card-hero:hover .ctitle,[data-theme=dark] .cs:hover .ctitle{color:var(--vl)}
+    .cs .ctitle{font-size:.98rem}
+
+    .cex{font-size:.83rem;line-height:1.68;color:var(--tx2);flex-grow:1}
+
+    .cfoot{display:flex;align-items:center;justify-content:space-between;margin-top:18px;padding-top:13px;border-top:1px solid var(--bdr)}
+    .rl{display:inline-flex;align-items:center;gap:5px;color:var(--violet);font-weight:600;font-size:.8rem;text-decoration:none;transition:gap .18s}
+    [data-theme=dark] .rl{color:var(--vl)}
+    .rl:hover{gap:9px}
+    .sbtn{background:none;border:1.5px solid var(--bdr);border-radius:7px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.8rem;transition:all .18s;color:var(--tx2)}
+    .sbtn:hover{border-color:var(--pink);color:var(--pink);transform:scale(1.1)}
+    .sbtn.saved{background:var(--pink);border-color:var(--pink);color:#fff}
+
+    .cs{background:var(--sur);border-radius:18px;overflow:hidden;box-shadow:var(--sh);display:flex;flex-direction:column;transition:transform .22s,box-shadow .22s;border:1px solid var(--bdr)}
+    .cs:hover{transform:translateY(-4px);box-shadow:var(--sh2)}
+
+    .divider{height:1px;background:linear-gradient(to right,transparent,var(--bdr),transparent);margin:0 0 38px}
+
+    /* NEWSLETTER BAND */
+    .nlband{background:linear-gradient(135deg,#0d1117,#1e1060);border-radius:20px;padding:36px 32px;text-align:center;margin-bottom:44px;position:relative;overflow:hidden}
+    .nlband::before{content:'';position:absolute;top:-48px;right:-48px;width:160px;height:160px;background:var(--pink);border-radius:50%;opacity:.12}
+    .nlband::after{content:'';position:absolute;bottom:-32px;left:-32px;width:120px;height:120px;background:var(--violet);border-radius:50%;opacity:.16}
+    .nley{font-size:.65rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--pink);margin-bottom:7px}
+    .nlt{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:.04em;color:#fff;margin-bottom:8px}
+    .nls{color:#9ca3af;font-size:.84rem;margin-bottom:22px;max-width:380px;margin-left:auto;margin-right:auto;line-height:1.6}
+    .nlf{display:flex;gap:8px;max-width:400px;margin:0 auto;position:relative;z-index:1}
+    @media(max-width:460px){.nlf{flex-direction:column}}
+    .nli{flex:1;padding:10px 15px;border-radius:999px;border:1.5px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:#fff;font-family:'DM Sans',sans-serif;font-size:.84rem;outline:none;transition:border-color .2s}
+    .nli::placeholder{color:#6b7280}.nli:focus{border-color:var(--pink)}
+    .nlb{background:var(--pink);color:#fff;border:none;border-radius:999px;padding:10px 20px;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:opacity .18s,transform .18s;position:relative;z-index:1}
+    .nlb:hover{opacity:.88;transform:scale(1.03)}
+    .nlnote{color:#4b5568;font-size:.68rem;margin-top:9px;position:relative;z-index:1}
+
+    /* SIDEBAR */
+    .sidebar{position:sticky;top:70px;display:flex;flex-direction:column;gap:18px}
+    .scard{background:var(--sur);border-radius:16px;padding:18px;box-shadow:var(--sh);border:1px solid var(--bdr);transition:background .3s}
+    .sc-title{font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:.06em;color:var(--tx);margin-bottom:12px}
+    .mkt-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bdr)}
+    .mkt-row:last-child{border-bottom:none}
+    .mn{font-size:.8rem;font-weight:600;color:var(--tx)}.mt{font-size:.66rem;color:var(--tx3)}
+    .mv{font-size:.83rem;font-weight:600;color:var(--tx);text-align:right}
+    .mc{font-size:.68rem;font-weight:700;text-align:right}
+    .mc.up{color:#10b981}.mc.dn{color:#ef4444}
+    .tlist{list-style:none;display:flex;flex-direction:column;gap:12px}
+    .ti{display:flex;align-items:flex-start;gap:10px;cursor:pointer}
+    .tnum{font-family:'Bebas Neue',sans-serif;font-size:1.28rem;color:var(--bdr);line-height:1;flex-shrink:0;width:20px;transition:color .18s}
+    .ti:hover .tnum{color:var(--pink)}
+    .tcat{font-size:.6rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--violet);margin-bottom:2px}
+    [data-theme=dark] .tcat{color:var(--vl)}
+    .th{font-size:.77rem;font-weight:600;color:var(--tx);line-height:1.35;transition:color .18s}
+    .ti:hover .th{color:var(--pink)}
+
+    /* FOOTER */
+    footer{background:var(--navy);padding:34px 24px 22px}
+    .fi{max-width:1280px;margin:0 auto}
+    .ft{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:26px;margin-bottom:26px;padding-bottom:26px;border-bottom:1px solid #1f2937}
+    @media(max-width:580px){.ft{grid-template-columns:1fr}}
+    .fb p{color:#6b7280;font-size:.78rem;margin-top:7px;line-height:1.6}
+    .fct{font-weight:700;font-size:.74rem;letter-spacing:.11em;text-transform:uppercase;color:#9ca3af;margin-bottom:11px}
+    .flinks{list-style:none;display:flex;flex-direction:column;gap:6px}
+    .flinks a{color:#6b7280;font-size:.8rem;text-decoration:none;transition:color .18s}.flinks a:hover{color:var(--pink)}
+    .fbot{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:9px}
+    .fcopy{color:#4b5568;font-size:.74rem}.fcopy span{color:var(--pink)}
+    .soc{display:flex;gap:7px}
+    .socbtn{width:30px;height:30px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid #1f2937;display:flex;align-items:center;justify-content:center;color:#6b7280;font-size:.78rem;cursor:pointer;transition:all .18s;text-decoration:none}
+    .socbtn:hover{background:var(--pink);color:#fff;border-color:var(--pink);transform:translateY(-2px)}
+
+    /* TOAST */
+    .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:#1f2937;color:#fff;font-size:.8rem;font-weight:500;padding:9px 18px;border-radius:999px;box-shadow:0 8px 32px rgba(0,0,0,.35);z-index:998;transition:transform .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none;border:1px solid rgba(255,255,255,.08);white-space:nowrap}
+    .toast.show{transform:translateX(-50%) translateY(0)}
+
+    /* MODAL */
+    .moverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(5px);z-index:500;align-items:center;justify-content:center;padding:14px}
+    .moverlay.open{display:flex}
+    .modal{background:var(--sur);border-radius:20px;padding:32px;max-width:440px;width:100%;position:relative;box-shadow:0 32px 80px rgba(0,0,0,.45);animation:min .32s cubic-bezier(.34,1.3,.64,1);border:1px solid var(--bdr)}
+    @keyframes min{from{transform:scale(.88) translateY(16px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+    .mcls{position:absolute;top:12px;right:12px;background:var(--sur2);border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;color:var(--tx2);transition:background .18s}
+    .mcls:hover{background:var(--bdr)}
+    .mem{font-size:2rem;margin-bottom:9px}
+    .modal h2{font-family:'DM Serif Display',serif;font-size:1.5rem;color:var(--tx);margin-bottom:7px}
+    .modal p{color:var(--tx2);font-size:.84rem;line-height:1.6;margin-bottom:18px}
+    .minp{width:100%;padding:10px 15px;border-radius:10px;border:1.5px solid var(--bdr);background:var(--sur2);color:var(--tx);font-family:'DM Sans',sans-serif;font-size:.86rem;outline:none;margin-bottom:9px;transition:border-color .2s}
+    .minp:focus{border-color:var(--pink)}
+    .mbtn{width:100%;background:var(--pink);color:#fff;border:none;border-radius:10px;padding:11px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.86rem;cursor:pointer;transition:opacity .18s}
+    .mbtn:hover{opacity:.88}
+
+    /* ANIMATIONS */
+    .fi-card{opacity:0;transform:translateY(14px);animation:fup .46s forwards}
+    @keyframes fup{to{opacity:1;transform:translateY(0)}}
+    .fi-card:nth-child(1){animation-delay:.04s}
+    .fi-card:nth-child(2){animation-delay:.09s}
+    .fi-card:nth-child(3){animation-delay:.14s}
+
+    .nsec{display:none}.nsec.vis{display:block}
+    .nlsec{display:none}.nlsec.vis{display:block}
+  </style>
+</head>
+<body>
+
+<div id="prog"></div>
+
+<!-- HEADER (sticky) -->
+<header>
+  <div class="hi">
+    <a href="#" class="logo">
+      <div class="logo-sq"></div>
+      <span class="logo-txt">Daily Digest</span>
+    </a>
+    <div class="hr">
+      <span class="tagline">Your news, beautifully illustrated</span>
+      <button class="btn-sub" onclick="openModal()">Subscribe Free</button>
+      <button class="btn-theme" id="themeBtn" onclick="toggleTheme()">🌙</button>
+    </div>
+  </div>
+</header>
+
+<!-- TICKER (not sticky — scrolls away naturally, no overlap) -->
+<div class="ticker-wrap">
+  <div class="ticker-label">🔥 Breaking</div>
+  <div class="ticker-track">
+    <span class="ticker-item"><em>🌐</em>US begins Strait of Hormuz blockade after Iran talks collapse</span>
+    <span class="ticker-item"><em>🤖</em>Meta debuts Muse Spark — first major AI model since $14B Scale AI deal</span>
+    <span class="ticker-item"><em>⚖️</em>Supreme Court strikes down Trump IEEPA tariffs; 15% global levy announced</span>
+    <span class="ticker-item"><em>🇭🇺</em>Orbán concedes — opposition heads for supermajority in Hungary</span>
+    <span class="ticker-item"><em>🚀</em>Artemis II crew splashes down after historic moon mission</span>
+    <span class="ticker-item"><em>📈</em>S&P 500 swings amid tariff uncertainty; Wall Street eyes Fed chair succession</span>
+    <span class="ticker-item"><em>🛡️</em>Anthropic model finds 27-year-old OpenBSD bug; commits $100M to cybersecurity</span>
+    <span class="ticker-item"><em>🌐</em>US begins Strait of Hormuz blockade after Iran talks collapse</span>
+    <span class="ticker-item"><em>🤖</em>Meta debuts Muse Spark — first major AI model since $14B Scale AI deal</span>
+    <span class="ticker-item"><em>⚖️</em>Supreme Court strikes down Trump IEEPA tariffs; 15% global levy announced</span>
+    <span class="ticker-item"><em>🇭🇺</em>Orbán concedes — opposition heads for supermajority in Hungary</span>
+    <span class="ticker-item"><em>🚀</em>Artemis II crew splashes down after historic moon mission</span>
+    <span class="ticker-item"><em>📈</em>S&P 500 swings amid tariff uncertainty; Wall Street eyes Fed chair succession</span>
+    <span class="ticker-item"><em>🛡️</em>Anthropic model finds 27-year-old OpenBSD bug; commits $100M to cybersecurity</span>
+  </div>
+</div>
+
+<!-- FILTER BAR -->
+<nav class="fbar">
+  <span class="flbl">Filter:</span>
+  <button class="pill on" onclick="filter('all',this)">🗞️ All News</button>
+  <button class="pill" onclick="filter('tech',this)">🤖 AI &amp; Tech</button>
+  <button class="pill" onclick="filter('mkt',this)">📈 Markets</button>
+  <button class="pill" onclick="filter('geo',this)">🌍 Geopolitics</button>
+  <button class="pill" onclick="filter('fash',this)">✨ Fashion</button>
+</nav>
+
+<!-- MAIN LAYOUT -->
+<div class="wrap">
+<div class="feed">
+
+  <!-- ── AI & TECH ── -->
+  <section class="nsec vis" data-cat="tech">
+    <div class="sh"><div class="si tech">🤖</div><h2 class="stitle">AI &amp; Tech</h2></div>
+    <div class="cgrid">
+
+      <!-- Hero -->
+      <article class="card-hero fi-card">
+        <div class="iw">
+          <img src="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&q=80" alt="AI" loading="lazy"/>
+          <span class="bdg t">BREAKING</span>
+        </div>
+        <div class="cb">
+          <div>
+            <div class="cmeta"><span class="src">CNBC</span><span class="rt">⏱ 5 min read</span></div>
+            <h3 class="ctitle">Meta debuts Muse Spark — its first proprietary AI model since $14.3B Scale AI deal</h3>
+            <p class="cex">Originally code-named Avocado, Muse Spark is the debut of Meta's new Muse series, developed by Wang's team at Meta Superintelligence Labs. It rolls out across Facebook, Instagram, WhatsApp, Messenger, and Meta's Ray-Ban AI glasses — with a Shopping mode and a "Contemplating" deep-reasoning feature to rival OpenAI and Google.</p>
+          </div>
+          <div class="cfoot"><a href="https://www.cnbc.com/2026/04/08/meta-debuts-first-major-ai-model-since-14-billion-deal-to-bring-in-alexandr-wang.html" class="rl" target="_blank" rel="noopener">Read Article →</a><button class="sbtn" onclick="save(this)">🔖</button></div>
+        </div>
+      </article>
+
+      <div class="crow">
+        <article class="cs fi-card">
+          <div class="iw"><img src="https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=600&q=80" alt="Anthropic" loading="lazy"/><span class="bdg t">CYBERSECURITY</span></div>
+          <div class="cb">
+            <div class="cmeta"><span class="src">NeuralBuddies</span><span class="rt">⏱ 4 min</span></div>
+            <h3 class="ctitle">Anthropic's new model found a 27-year-old bug in OpenBSD — then pledged $100M to fix the internet</h3>
+            <p class="cex">Mythos surfaced thousands of vulnerabilities in widely-used software. Anthropic is limiting broad access but sharing with defense partners.</p>
+            <div class="cfoot"><a href="https://www.neuralbuddies.com/p/ai-news-recap-april-10-2026" class="rl" target="_blank" rel="noopener">Read →</a><button class="sbtn" onclick="save(this)">🔖</button></div>
+          </div>
+        </article>
+        <article class="cs fi-card">
+          <div class="iw"><img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&q=80" alt="Chips" loading="lazy"/><span class="bdg t">INFRASTRUCTURE</span></div>
+          <div class="cb">
+            <div class="cmeta"><span class="src">TechStartups</span><span class="rt">⏱ 3 min</span></div>
+            <h3 class="ctitle">Big Tech bets on nuclear power to feed AI data centers' insatiable energy appetite</h3>
+            <p class="cex">Microsoft, Google, and Amazon are locking in long-term nuclear supply deals, turning energy into a strategic tech layer.</p>
+            <div class="cfoot"><a href="https://techstartups.com/2026/04/10/top-tech-news-today-april-10-2026/" class="rl" target="_blank" rel="noopener">Read →</a><button class="sbtn" onclick="save(this)">🔖</button></div>
+          </div>
+        </article>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- NEWSLETTER BAND -->
+  <div class="nlsec vis nlband" data-cat="all">
+    <p class="nley">📬 Free Daily Newsletter</p>
+    <h2 class="nlt">Stay ahead of the story</h2>
+    <p class="nls">Get the top 5 stories delivered to your inbox every morning. No noise — just what matters.</p>
+    <div class="nlf">
+      <input class="nli" type="email" placeholder="your@email.com"/>
+      <button class="nlb" onclick="subscribe()">Subscribe →</button>
+    </div>
+    <p class="nlnote">Join 42,000+ readers · Unsubscribe anytime</p>
+  </div>
+
+  <!-- ── MARKETS ── -->
+  <section class="nsec vis" data-cat="mkt">
+    <div class="sh"><div class="si mkt">📈</div><h2 class="stitle">Markets</h2></div>
+    <div class="cgrid">
+
+      <article class="card-hero fi-card">
+        <div class="iw">
+          <img src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80" alt="Markets" loading="lazy"/>
+          <span class="bdg m">TARIFFS</span>
+        </div>
+        <div class="cb">
+          <div>
+            <div class="cmeta"><span class="src">US Bank / Bloomberg</span><span class="rt">⏱ 6 min read</span></div>
+            <h3 class="ctitle">Supreme Court strikes down IEEPA tariffs — Trump pivots to 15% global levy within hours</h3>
+            <p class="cex">The court ruled Trump had exceeded his authority under the International Emergency Economic Powers Act. Markets swung violently on the news before stabilising as the administration announced a fresh 10%–15% universal baseline tariff, this time under the Trade Act of 1974. Analysts say the net impact on import costs may be similar.</p>
+          </div>
+          <div class="cfoot"><a href="https://www.usbank.com/investing/financial-perspectives/market-news/stock-market-under-trump.html" class="rl" target="_blank" rel="noopener">Read Article →</a><button class="sbtn" onclick="save(this)">🔖</button></div>
+        </div>
+      </article>
+
+      <div class="crow">
+        <article class="cs fi-card">
+          <div class="iw"><img src="https://images.unsplash.com/photo-1559526324-593bc073d938?w=600&q=80" alt="Fed" loading="lazy"/><span class="bdg m">FED WATCH</span></div>
+          <div class="cb">
+            <div class="cmeta"><span class="src">Motley Fool</span><span class="rt">⏱ 4 min</span></div>
+            <h3 class="ctitle">Powell's term ends in May — Trump's Fed chair pick rattles Wall Street</h3>
+            <p class="cex">Division inside the FOMC and an imminent leadership change are becoming a bigger risk than tariffs themselves, strategists warn.</p>
+            <div class="cfoot"><a href="https://www.fool.com/investing/2026/01/04/wall-street-ticking-time-bomb-2026-tariffs-its-fed/" class="rl" target="_blank" rel="noopener">Read →</a><button class="sbtn" onclick="save(this)">🔖</button></div>
+          </div>
+        </article>
+        <article class="cs fi-card">
+          <div class="iw"><img src="https://images.unsplash.com/photo-1640340434855-6084b1f4901c?w=600&q=80" alt="OpenAI IPO" loading="lazy"/><span class="bdg m">IPO WATCH</span></div>
+          <div class="cb">
+            <div class="cmeta"><span class="src">Reuters / CNBC</span><span class="rt">⏱ 3 min</span></div>
+            <h3 class="ctitle">OpenAI eyes $1 trillion IPO — and plans to reserve shares for retail investors</h3>
+            <p class="cex">CFO Sarah Friar confirmed OpenAI is laying groundwork for a US listing, with more than $3B already committed by individual investors in the latest funding round.</p>
+            <div class="cfoot"><a href="https://techstartups.com/2026/04/09/top-tech-news-today-april-9-2026/" class="rl" target="_blank" rel="noopener">Read →</a><button class="sbtn" onclick="save(this)">🔖</button></div>
+          </div>
+        </article>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ── GEOPOLITICS ── -->
+  <section class="nsec vis" data-cat="geo">
+    <div class="sh"><div class="si geo">🌍</div><h2 class="stitle">Geopolitics</h2></div>
+    <div class="cgrid">
+
+      <article class="card-hero fi-card">
+        <div class="iw">
+          <img src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?w=800&q=80" alt="Hormuz" loading="lazy"/>
+          <span class="bdg g">BREAKING</span>
+        </div>
+        <div class="cb">
+          <div>
+            <div class="cmeta"><span class="src">CBS News / CENTCOM</span><span class="rt">⏱ 5 min read</span></div>
+            <h3 class="ctitle">US begins Strait of Hormuz blockade — Iran nuclear talks collapse as JD Vance departs Pakistan empty-handed</h3>
+            <p class="cex">CENTCOM confirmed the blockade will begin Monday after Vance told reporters "we have not reached an agreement." Tehran is accused of misjudging its leverage in back-channel negotiations mediated by Pakistan, a US official said.</p>
+          </div>
+          <div class="cfoot"><a href="https://www.cbsnews.com/live-updates/iran-war-trump-strait-of-hormuz-israel-ceasefire-talks/" class="rl" target="_blank" rel="noopener">Read Article →</a><button class="sbtn" onclick="save(this)">🔖</button></div>
+        </div>
+      </article>
+
+      <div class="crow">
+        <article class="cs fi-card">
+          <div class="iw"><img src="https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&q=80" alt="Hungary" loading="lazy"/><span class="bdg g">ELECTIONS</span></div>
+          <div class="cb">
+            <div class="cmeta"><span class="src">Fox News</span><span class="rt">⏱ 3 min</span></div>
+            <h3 class="ctitle">Orbán concedes as Hungary's opposition heads toward a historic supermajority win</h3>
+            <p class="cex">Opposition leader Péter Magyar surged to a landslide result, signalling a major political realignment in one of the EU's most contested democracies.</p>
+            <div class="cfoot"><a href="https://www.foxnews.com/world/viktor-orban-concedes-defeat-opposition-leader-heads-potential-supermajority-win" class="rl" target="_blank" rel="noopener">Read →</a><button class="sbtn" onclick="save(this)">🔖</button></div>
+          </div>
+        </article>
+        <article class="cs fi-card">
+          <div class="iw"><img src="https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=600&q=80" alt="Ukraine" loading="lazy"/><span class="bdg g">CONFLICT</span></div>
+          <div class="cb">
+            <div class="cmeta"><span class="src">Fox News</span><span class="rt">⏱ 4 min</span></div>
+            <h3 class="ctitle">Ukraine and Russia accuse each other of thousands of violations of Putin's Easter ceasefire</h3>
+            <p class="cex">Both sides logged hundreds of attacks within hours of the Kremlin-declared truce taking effect, with artillery fire reported across multiple fronts.</p>
+            <div class="cfoot"><a href="https://www.foxnews.com/world/ukraine-russia-claim-thousands-violations-putin-imposed-holiday-ceasefire" class="rl" target="_blank" rel="noopener">Read →</a><button class="sbtn" onclick="save(this)">🔖</button></div>
+          </div>
+        </article>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ── FASHION ── -->
+  <section class="nsec vis" data-cat="fash">
+    <div class="sh"><div class="si fash">✨</div><h2 class="stitle">Fashion</h2></div>
+    <div class="cgrid">
+
+      <article class="card-hero fi-card">
+        <div class="iw">
+          <img src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=800&q=80" alt="Runway" loading="lazy"/>
+          <span class="bdg f">STYLE</span>
+        </div>
+        <div class="cb">
+          <div>
+            <div class="cmeta"><span class="src">Vogue / Harper's Bazaar</span><span class="rt">⏱ 5 min read</span></div>
+            <h3 class="ctitle">The Hermès Birkin just quietly outperformed the S&P 500 over the last decade</h3>
+            <p class="cex">New data shows the iconic bag has delivered annualised returns of 14.2% over 10 years, beating the S&P 500's 12.8% average. Analysts say ultra-rare luxury goods are emerging as a recognised alternative asset class, with Gen Z buyers leading a new wave of "investment dressing."</p>
+          </div>
+          <div class="cfoot"><a href="#" class="rl">Read Article →</a><button class="sbtn" onclick="save(this)">🔖</button></div>
+        </div>
+      </article>
+
+      <div class="crow">
+        <article class="cs fi-card">
+          <div class="iw"><img src="https://images.unsplash.com/photo-1445205170230-053b83016050?w=600&q=80" alt="Circular" loading="lazy"/><span class="bdg f">SUSTAINABILITY</span></div>
+          <div class="cb">
+            <div class="cmeta"><span class="src">Harper's Bazaar</span><span class="rt">⏱ 3 min</span></div>
+            <h3 class="ctitle">Gen Z is reshaping luxury through circular fashion — and legacy houses are listening</h3>
+            <p class="cex">Resale, rental, and repair are no longer niche. Major labels are launching their own resale platforms to capture the shift.</p>
+            <div class="cfoot"><a href="#" class="rl">Read →</a><button class="sbtn" onclick="save(this)">🔖</button></div>
+          </div>
+        </article>
+        <article class="cs fi-card">
+          <div class="iw"><img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80" alt="Sneakers" loading="lazy"/><span class="bdg f">DROPS</span></div>
+          <div class="cb">
+            <div class="cmeta"><span class="src">Hypebeast</span><span class="rt">⏱ 2 min</span></div>
+            <h3 class="ctitle">Milan Fashion Week 2026 — quiet luxury is officially the decade's dominant aesthetic</h3>
+            <p class="cex">After seasons of maximalism, every major house pivoted to precision tailoring, neutral palettes, and understated silhouettes.</p>
+            <div class="cfoot"><a href="#" class="rl">Read →</a><button class="sbtn" onclick="save(this)">🔖</button></div>
+          </div>
+        </article>
+      </div>
+
+    </div>
+  </section>
+
+</div><!-- /feed -->
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+
+  <div class="scard">
+    <h3 class="sc-title">📊 Markets — Apr 12</h3>
+    <div>
+      <div class="mkt-row"><div><div class="mn">S&amp;P 500</div><div class="mt">SPX</div></div><div><div class="mv">5,363</div><div class="mc dn">▼ −3.5%</div></div></div>
+      <div class="mkt-row"><div><div class="mn">NASDAQ</div><div class="mt">COMP</div></div><div><div class="mv">16,387</div><div class="mc dn">▼ −4.1%</div></div></div>
+      <div class="mkt-row"><div><div class="mn">Bitcoin</div><div class="mt">BTC</div></div><div><div class="mv">$82,400</div><div class="mc dn">▼ −1.8%</div></div></div>
+      <div class="mkt-row"><div><div class="mn">Gold</div><div class="mt">XAU</div></div><div><div class="mv">$3,238</div><div class="mc up">▲ +1.9%</div></div></div>
+      <div class="mkt-row"><div><div class="mn">Oil (WTI)</div><div class="mt">crude</div></div><div><div class="mv">$61.10</div><div class="mc dn">▼ −2.1%</div></div></div>
+    </div>
+  </div>
+
+  <div class="scard">
+    <h3 class="sc-title">🔥 Most Read Today</h3>
+    <ul class="tlist">
+      <li class="ti"><span class="tnum">01</span><div><div class="tcat">Geopolitics</div><div class="th">US to blockade Strait of Hormuz — oil markets brace</div></div></li>
+      <li class="ti"><span class="tnum">02</span><div><div class="tcat">AI & Tech</div><div class="th">Meta's Muse Spark: the AI model that ends Meta's open-source era</div></div></li>
+      <li class="ti"><span class="tnum">03</span><div><div class="tcat">Markets</div><div class="th">Supreme Court kills IEEPA tariffs — Trump fires back with new levy</div></div></li>
+      <li class="ti"><span class="tnum">04</span><div><div class="tcat">Geopolitics</div><div class="th">Orbán era ends — Hungary's political earthquake explained</div></div></li>
+      <li class="ti"><span class="tnum">05</span><div><div class="tcat">AI & Tech</div><div class="th">OpenAI hits $25B revenue — IPO could value it at $1 trillion</div></div></li>
+    </ul>
+  </div>
+
+  <div class="scard" style="background:linear-gradient(135deg,#0d1117,#1e1060);border-color:transparent">
+    <p style="font-size:.63rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--pink);margin-bottom:5px">📬 Newsletter</p>
+    <p style="font-family:'DM Serif Display',serif;font-size:1rem;color:#fff;margin-bottom:5px">5 stories. Every morning.</p>
+    <p style="font-size:.74rem;color:#6b7280;margin-bottom:13px;line-height:1.5">Join 42,000+ readers who start their day with Daily Digest.</p>
+    <input type="email" placeholder="your@email.com" style="width:100%;padding:8px 12px;border-radius:8px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:#fff;font-family:'DM Sans',sans-serif;font-size:.78rem;outline:none;margin-bottom:7px"/>
+    <button onclick="subscribe()" style="width:100%;background:var(--pink);color:#fff;border:none;border-radius:8px;padding:8px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer">Subscribe Free →</button>
+  </div>
+
+</aside>
+</div><!-- /wrap -->
+
+<!-- FOOTER -->
+<footer>
+  <div class="fi">
+    <div class="ft">
+      <div class="fb">
+        <a href="#" class="logo"><div class="logo-sq"></div><span class="logo-txt">Daily Digest</span></a>
+        <p>Your news, beautifully illustrated. AI, markets, geopolitics, and culture — refreshed every day.</p>
+      </div>
+      <div>
+        <p class="fct">Sections</p>
+        <ul class="flinks">
+          <li><a href="#">🤖 AI &amp; Tech</a></li>
+          <li><a href="#">📈 Markets</a></li>
+          <li><a href="#">🌍 Geopolitics</a></li>
+          <li><a href="#">✨ Fashion</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="fct">Company</p>
+        <ul class="flinks">
+          <li><a href="#">About</a></li>
+          <li><a href="#">Newsletter</a></li>
+          <li><a href="#">Advertise</a></li>
+          <li><a href="#">Privacy</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="fbot">
+      <p class="fcopy">© 2026 <span>Daily Digest</span> · All rights reserved</p>
+      <div class="soc">
+        <a class="socbtn" href="#">𝕏</a>
+        <a class="socbtn" href="#">📸</a>
+        <a class="socbtn" href="#">in</a>
+        <a class="socbtn" href="#">📡</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- MODAL -->
+<div class="moverlay" id="mo" onclick="cmo(event)">
+  <div class="modal">
+    <button class="mcls" onclick="closeModal()">✕</button>
+    <div class="mem">📬</div>
+    <h2>Get the Daily Digest</h2>
+    <p>5 hand-picked stories delivered to your inbox every morning. Join 42,000+ readers.</p>
+    <input class="minp" type="email" placeholder="your@email.com"/>
+    <button class="mbtn" onclick="subscribe()">Subscribe for Free →</button>
+    <p style="font-size:.68rem;color:var(--tx3);margin-top:9px;text-align:center">No spam. Unsubscribe anytime.</p>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  /* THEME */
+  const t=localStorage.getItem('dd-theme')||'light';
+  document.documentElement.setAttribute('data-theme',t);
+  document.getElementById('themeBtn').textContent=t==='dark'?'☀️':'🌙';
+  function toggleTheme(){
+    const n=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
+    document.documentElement.setAttribute('data-theme',n);
+    localStorage.setItem('dd-theme',n);
+    document.getElementById('themeBtn').textContent=n==='dark'?'☀️':'🌙';
+    toast(n==='dark'?'🌙 Dark mode on':'☀️ Light mode on');
+  }
+
+  /* FILTER */
+  function filter(cat,btn){
+    document.querySelectorAll('.pill').forEach(p=>p.classList.remove('on'));
+    btn.classList.add('on');
+    document.querySelectorAll('.nsec').forEach(s=>s.classList.toggle('vis',cat==='all'||s.dataset.cat===cat));
+    const nl=document.querySelector('.nlsec');
+    if(nl)nl.classList.toggle('vis',cat==='all');
+  }
+
+  /* SAVE */
+  function save(b){b.classList.toggle('saved');toast(b.classList.contains('saved')?'🔖 Article saved!':'Removed from saved')}
+
+  /* NEWSLETTER */
+  function subscribe(){closeModal();toast('🎉 You\'re subscribed! Check your inbox.')}
+
+  /* MODAL */
+  function openModal(){document.getElementById('mo').classList.add('open')}
+  function closeModal(){document.getElementById('mo').classList.remove('open')}
+  function cmo(e){if(e.target.id==='mo')closeModal()}
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+  /* TOAST */
+  let tt;
+  function toast(m){const el=document.getElementById('toast');el.textContent=m;el.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>el.classList.remove('show'),2800)}
+
+  /* PROGRESS */
+  window.addEventListener('scroll',()=>{
+    const h=document.documentElement.scrollHeight-window.innerHeight;
+    document.getElementById('prog').style.width=(h>0?(scrollY/h)*100:0)+'%';
+  });
+</script>
+</body>
+</html>
