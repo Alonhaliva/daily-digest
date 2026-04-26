@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Daily Digest – April 25, 2026</title>
+  <title>Daily Digest – April 26, 2026</title>
   <meta name="description" content="Today's top stories in AI, Markets, Geopolitics and Fashion — updated every morning at 8am PST."/>
-  <meta property="og:title" content="Daily Digest – April 25, 2026"/>
-  <meta property="og:description" content="Today's top stories in AI, Markets, Geopolitics and Fashion."/>
+  <meta property="og:title" content="Daily Digest – April 26, 2026"/>
+  <meta property="og:description" content="Today's top stories in AI, Markets, Geopolitics and Fashion — beautifully illustrated."/>
   <meta property="og:image" content="https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80"/>
   <meta property="og:url" content="https://alonhaliva.github.io/daily-digest/"/>
   <meta property="og:type" content="website"/>
@@ -19,14 +19,6 @@
     html{scroll-behavior:smooth}
     body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;transition:background .3s,color .3s}
     #prog{position:fixed;top:0;left:0;height:3px;background:linear-gradient(to right,var(--pink),var(--violet));width:0%;z-index:9999;pointer-events:none}
-    .ticker-wrap{background:var(--navy);height:34px;display:flex;align-items:center;overflow:hidden}
-    [data-theme=dark] .ticker-wrap{background:#0d0f17;border-bottom:1px solid var(--bdr)}
-    .ticker-label{background:var(--pink);color:#fff;font-size:.66rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;padding:0 13px;height:100%;display:flex;align-items:center;white-space:nowrap;flex-shrink:0}
-    .ticker-track{display:flex;animation:tick 55s linear infinite;white-space:nowrap}
-    .ticker-track:hover{animation-play-state:paused}
-    .ticker-item{color:#d1d5db;font-size:.73rem;padding:0 30px}
-    .ticker-item em{color:var(--pink);font-style:normal;margin-right:6px}
-    @keyframes tick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
     header{background:var(--navy);padding:16px 24px;position:sticky;top:0;z-index:200;box-shadow:0 2px 20px rgba(0,0,0,.45)}
     .hi{max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:14px}
     .logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none}
@@ -35,13 +27,22 @@
     .hr{display:flex;align-items:center;gap:9px}
     .tagline{color:#9ca3af;font-size:.74rem;letter-spacing:.04em}
     @media(max-width:580px){.tagline{display:none}}
+    .date-badge{background:rgba(255,255,255,.1);color:#9ca3af;font-size:.7rem;padding:4px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);white-space:nowrap}
+    @media(max-width:640px){.date-badge{display:none}}
     .btn-sub{background:var(--pink);color:#fff;border:none;border-radius:999px;padding:7px 16px;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;transition:opacity .18s,transform .18s}
     .btn-sub:hover{opacity:.88;transform:translateY(-1px)}
     @media(max-width:400px){.btn-sub{display:none}}
     .btn-theme{background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.14);border-radius:50%;color:#fff;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.95rem;transition:background .2s,transform .25s;flex-shrink:0}
     .btn-theme:hover{background:rgba(255,255,255,.16);transform:rotate(22deg)}
-    .date-badge{background:rgba(255,255,255,.1);color:#9ca3af;font-size:.7rem;padding:4px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);white-space:nowrap}
-    @media(max-width:640px){.date-badge{display:none}}
+    .ticker-wrap{background:var(--navy);height:36px;display:flex;align-items:center;overflow:hidden;width:100%}
+    [data-theme=dark] .ticker-wrap{background:#0d0f17;border-bottom:1px solid var(--bdr)}
+    .ticker-label{background:var(--pink);color:#fff;font-size:.65rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;padding:0 14px;height:36px;line-height:36px;white-space:nowrap;flex-shrink:0}
+    .ticker-outer{flex:1;overflow:hidden;height:36px;display:flex;align-items:center}
+    .ticker-track{display:flex;animation:tick 60s linear infinite;white-space:nowrap;align-items:center}
+    .ticker-track:hover{animation-play-state:paused}
+    .ticker-item{color:#d1d5db;font-size:.72rem;padding:0 28px;line-height:36px}
+    .ticker-item em{color:var(--pink);font-style:normal;margin-right:6px}
+    @keyframes tick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
     .fbar{background:var(--sur);border-bottom:1px solid var(--bdr);padding:10px 24px;display:flex;align-items:center;gap:8px;overflow-x:auto;scrollbar-width:none;transition:background .3s}
     .fbar::-webkit-scrollbar{display:none}
     .flbl{font-weight:600;font-size:.77rem;color:var(--tx2);white-space:nowrap;margin-right:3px}
@@ -115,6 +116,7 @@
     .tnum{font-family:'Bebas Neue',sans-serif;font-size:1.28rem;color:var(--bdr);line-height:1;flex-shrink:0;width:20px;transition:color .18s}
     .ti:hover .tnum{color:var(--pink)}
     .tcat{font-size:.6rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--violet);margin-bottom:2px}
+    [data-theme=dark] .tcat{color:var(--vl)}
     .th{font-size:.77rem;font-weight:600;color:var(--tx);line-height:1.35;transition:color .18s}
     .ti:hover .th{color:var(--pink)}
     footer{background:var(--navy);padding:34px 24px 22px}
@@ -134,8 +136,8 @@
     .toast.show{transform:translateX(-50%) translateY(0)}
     .moverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(5px);z-index:500;align-items:center;justify-content:center;padding:14px}
     .moverlay.open{display:flex}
-    .modal{background:var(--sur);border-radius:20px;padding:32px;max-width:440px;width:100%;position:relative;box-shadow:0 32px 80px rgba(0,0,0,.45);animation:min .32s cubic-bezier(.34,1.3,.64,1);border:1px solid var(--bdr)}
-    @keyframes min{from{transform:scale(.88) translateY(16px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+    .modal{background:var(--sur);border-radius:20px;padding:32px;max-width:440px;width:100%;position:relative;box-shadow:0 32px 80px rgba(0,0,0,.45);animation:minIn .32s cubic-bezier(.34,1.3,.64,1);border:1px solid var(--bdr)}
+    @keyframes minIn{from{transform:scale(.88) translateY(16px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
     .mcls{position:absolute;top:12px;right:12px;background:var(--sur2);border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;color:var(--tx2)}
     .mem{font-size:2rem;margin-bottom:9px}
     .modal h2{font-family:'DM Serif Display',serif;font-size:1.5rem;color:var(--tx);margin-bottom:7px}
@@ -147,7 +149,7 @@
     .fi-card:nth-child(1){animation-delay:.04s}.fi-card:nth-child(2){animation-delay:.09s}.fi-card:nth-child(3){animation-delay:.14s}
     .nsec{display:none}.nsec.vis{display:block}
     .nlsec{display:none}.nlsec.vis{display:block}
-  </style>
+    </style>
 </head>
 <body>
 <div id="prog"></div>
@@ -156,102 +158,74 @@
     <a href="#" class="logo"><div class="logo-sq"></div><span class="logo-txt">Daily Digest</span></a>
     <div class="hr">
       <span class="tagline">Your news, beautifully illustrated</span>
-      <span class="date-badge">📅 April 25, 2026</span>
+      <span class="date-badge">&#128197; April 26, 2026</span>
       <button class="btn-sub" onclick="openModal()">Subscribe Free</button>
-      <button class="btn-theme" id="themeBtn" onclick="toggleTheme()">🌙</button>
+      <button class="btn-theme" id="themeBtn" onclick="toggleTheme()">&#127769;</button>
     </div>
   </div>
 </header>
 <div class="ticker-wrap">
-  <div class="ticker-label">🔥 Breaking</div>
-  <div class="ticker-track"><span class="ticker-item"><em>🤖</em>Mount Sinai Health System and Guyana Ministry of Health Host Seminar on Practica</span>
-    <span class="ticker-item"><em>🤖</em>Bragar Eagel & Squire, P.C. Reminds Concorde International Group Ltd. Investors </span>
-    <span class="ticker-item"><em>📈</em>Oracle Corporation (ORCL): A Safe Stock for Beginners?</span>
-    <span class="ticker-item"><em>📈</em>Sonor Investments Limited Reports Financial Results for the Year Ended December </span>
-    <span class="ticker-item"><em>🌍</em>John Ternus: Apple’s next CEO to lead its AI future</span>
-    <span class="ticker-item"><em>🌍</em>'Summer House' Reunion Audio Leak: Bravo Launches Investigation</span>
-    <span class="ticker-item"><em>✨</em>Xbox CEO Won’t Commit to Exclusives Just Yet, but Insists Gen9 Will Deliver a “F</span>
-    <span class="ticker-item"><em>✨</em>392 Stroker-Powered Superformance MKIII 5-Speed at No Reserve</span>
-    <span class="ticker-item"><em>🤖</em>Mount Sinai Health System and Guyana Ministry of Health Host Seminar on Practica</span>
-    <span class="ticker-item"><em>🤖</em>Bragar Eagel & Squire, P.C. Reminds Concorde International Group Ltd. Investors </span>
-    <span class="ticker-item"><em>📈</em>Oracle Corporation (ORCL): A Safe Stock for Beginners?</span>
-    <span class="ticker-item"><em>📈</em>Sonor Investments Limited Reports Financial Results for the Year Ended December </span>
-    <span class="ticker-item"><em>🌍</em>John Ternus: Apple’s next CEO to lead its AI future</span>
-    <span class="ticker-item"><em>🌍</em>'Summer House' Reunion Audio Leak: Bravo Launches Investigation</span>
-    <span class="ticker-item"><em>✨</em>Xbox CEO Won’t Commit to Exclusives Just Yet, but Insists Gen9 Will Deliver a “F</span>
-    <span class="ticker-item"><em>✨</em>392 Stroker-Powered Superformance MKIII 5-Speed at No Reserve</span>
-    </div>
+  <div class="ticker-label">&#128293; Breaking</div>
+  <div class="ticker-outer"><div class="ticker-track"><span class="ticker-item"><em>&#129302;</em>SpaceX XAI 2027</span><span class="ticker-item"><em>&#129302;</em> A boost for the relegation battle? HSV fans unveil epic tifo</span><span class="ticker-item"><em>&#128200;</em>Oklahoma Sooners OL drafted by Houston Texans</span><span class="ticker-item"><em>&#128200;</em>Peak-cycle buybacks haunt India’s IT giants</span><span class="ticker-item"><em>&#127758;</em>McFarlane Toys' DC Comics Red Platinum Edition Aztek Debuts</span><span class="ticker-item"><em>&#127758;</em>Trump cancels envoys' trip to Pakistan for Iran talks</span><span class="ticker-item"><em>&#10024;</em>Arsenal set new goals record & bring up PL landmark in style </span><span class="ticker-item"><em>&#10024;</em>No. 1 UCLA baseball escapes the Hornets with shocking walk-off finish</span><span class="ticker-item"><em>&#129302;</em>SpaceX XAI 2027</span><span class="ticker-item"><em>&#129302;</em> A boost for the relegation battle? HSV fans unveil epic tifo</span><span class="ticker-item"><em>&#128200;</em>Oklahoma Sooners OL drafted by Houston Texans</span><span class="ticker-item"><em>&#128200;</em>Peak-cycle buybacks haunt India’s IT giants</span><span class="ticker-item"><em>&#127758;</em>McFarlane Toys' DC Comics Red Platinum Edition Aztek Debuts</span><span class="ticker-item"><em>&#127758;</em>Trump cancels envoys' trip to Pakistan for Iran talks</span><span class="ticker-item"><em>&#10024;</em>Arsenal set new goals record & bring up PL landmark in style </span><span class="ticker-item"><em>&#10024;</em>No. 1 UCLA baseball escapes the Hornets with shocking walk-off finish</span></div></div>
 </div>
 <nav class="fbar">
   <span class="flbl">Filter:</span>
-  <button class="pill on" onclick="filter('all',this)">🗞️ All News</button>
-  <button class="pill" onclick="filter('tech',this)">🤖 AI &amp; Tech</button>
-  <button class="pill" onclick="filter('mkt',this)">📈 Markets</button>
-  <button class="pill" onclick="filter('geo',this)">🌍 Geopolitics</button>
-  <button class="pill" onclick="filter('fash',this)">✨ Fashion</button>
+  <button class="pill on" onclick="filter('all',this)">&#128240; All News</button>
+  <button class="pill" onclick="filter('tech',this)">&#129302; AI &amp; Tech</button>
+  <button class="pill" onclick="filter('mkt',this)">&#128200; Markets</button>
+  <button class="pill" onclick="filter('geo',this)">&#127758; Geopolitics</button>
+  <button class="pill" onclick="filter('fash',this)">&#10024; Fashion</button>
 </nav>
 <div class="wrap">
 <div class="feed">
   <section class="nsec vis" data-cat="tech">
-    <div class="sh"><div class="si tech">🤖</div><h2 class="stitle">AI &amp; Tech</h2></div>
-    <div class="cgrid">
-      <article class="card-hero fi-card"><div class="iw"><img src="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&q=80" alt="AI & TECH" loading="lazy"/><span class="bdg t">AI & TECH</span></div><div class="cb"><div><div class="cmeta"><span class="src">GlobeNewswire</span><span class="rt">⏱ 2 min read</span></div><h3 class="ctitle">Mount Sinai Health System and Guyana Ministry of Health Host Seminar on Practical, Responsible Integration of Artificial</h3><p class="cex">Georgetown, Guyana, April 24, 2026 (GLOBE NEWSWIRE) -- The Mount Sinai Health System and the Guyana Ministry of Health yesterday convened government, clinical, operational, and artificial intelligence (AI) leaders for a </p></div><div class="cfoot"><a href="https://www.globenewswire.com/news-release/2026/04/24/3280998/0/en/Mount-Sinai-Health-System-and-Guyana-Ministry-of-Health-Host-Seminar-on-Practical-Responsible-Integration-of-Artificial-Intelligence-in-Health-Care.html" class="rl" target="_blank" rel="noopener">Read Article →</a><button class="sbtn" onclick="save(this)">🔖</button></div></div></article>
-      <div class="crow"><article class="cs fi-card"><div class="iw"><img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&q=80" alt="TECH" loading="lazy"/><span class="bdg t">TECH</span></div><div class="cb"><div class="cmeta"><span class="src">GlobeNewswire</span><span class="rt">⏱ 3 min read</span></div><h3 class="ctitle">Bragar Eagel & Squire, P.C. Reminds Concorde International Group Ltd. Investors They Have Until May 18th to Seek Lead Pl</h3><p class="cex">Bragar Eagel & Squire, P.C. Litigation Partner Brandon Walker Encourages Investors Who Suffered Losses In Concorde (CIGL) To Contact Him Directly To Discuss The</p><div class="cfoot"><a href="https://www.globenewswire.com/news-release/2026/04/24/3280999/0/en/Bragar-Eagel-Squire-P-C-Reminds-Concorde-International-Group-Ltd-Investors-They-Have-Until-May-18th-to-Seek-Lead-Plaintiff-Role-and-Encourages-Investors-to-Contact-the-Firm.html" class="rl" target="_blank" rel="noopener">Read →</a><button class="sbtn" onclick="save(this)">🔖</button></div></div></article><article class="cs fi-card"><div class="iw"><img src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=600&q=80" alt="TECH" loading="lazy"/><span class="bdg t">TECH</span></div><div class="cb"><div class="cmeta"><span class="src">Ibtimes.com.au</span><span class="rt">⏱ 4 min read</span></div><h3 class="ctitle">Nvidia Stock Buy or Sell in 2026: AI Dominance Fuels Strong Buy Consensus Despite High Valuation</h3><p class="cex">SANTA CLARA, Calif. — Nvidia Corp. remains one of the most compelling yet polarizing investment stories in 2026, with Wall Street analysts overwhelmingly recomm</p><div class="cfoot"><a href="https://www.ibtimes.com.au/nvidia-stock-buy-sell-2026-ai-dominance-fuels-strong-buy-consensus-despite-high-valuation-1867451" class="rl" target="_blank" rel="noopener">Read →</a><button class="sbtn" onclick="save(this)">🔖</button></div></div></article></div>
-    </div>
+    <div class="sh"><div class="si tech">&#129302;</div><h2 class="stitle">AI &amp; Tech</h2></div>
+    <div class="cgrid"><article class="card-hero fi-card"><div class="iw"><img src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&q=80" alt="AI &amp; TECH" loading="lazy"/><span class="bdg t">AI &amp; TECH</span></div><div class="cb"><div><div class="cmeta"><span class="src">Next Big Future</span><span class="rt">&#9201; 2 min read</span></div><h3 class="ctitle">SpaceX XAI 2027</h3><p class="cex">SpaceX dish production is ramping toward 50,000 dishes/day. It is already at ~25k/day recently. The high speed internet subscriber base could more than double to ~20–25 million by end of 2026 and then ~50 million in 2027</p></div><div class="cfoot"><a href="https://www.nextbigfuture.com/2026/04/spacex-xai-2027.html" class="rl" target="_blank" rel="noopener">Read Article &#8594;</a><button class="sbtn" onclick="save(this)">&#128278;</button></div></div></article><div class="crow"><article class="cs fi-card"><div class="iw"><img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80" alt="TECH" loading="lazy"/><span class="bdg t">TECH</span></div><div class="cb"><div class="cmeta"><span class="src">Onefootball.com</span><span class="rt">&#9201; 3 min read</span></div><h3 class="ctitle"> A boost for the relegation battle? HSV fans unveil epic tifo</h3><p class="cex">Hamburger SV are determined to pick up three points today to pull clear in the relegation battle. Before kickoff against Hoffenheim, the fans are already provid</p><div class="cfoot"><a href="https://onefootball.com/en/news/a-boost-for-the-relegation-battle-hsv-fans-unveil-epic-tifo-42767234" class="rl" target="_blank" rel="noopener">Read &#8594;</a><button class="sbtn" onclick="save(this)">&#128278;</button></div></div></article><article class="cs fi-card"><div class="iw"><img src="https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=800&q=80" alt="TECH" loading="lazy"/><span class="bdg t">TECH</span></div><div class="cb"><div class="cmeta"><span class="src">BusinessLine</span><span class="rt">&#9201; 4 min read</span></div><h3 class="ctitle">Symbiosis launches Asia’s first UNESCO chair on gender inclusion in skills</h3><p class="cex">The initiative is spearheaded by Dr. Swati Mujumdar, Pro-Chancellor of SSPU, and aims to strengthen gender inclusion in emerging and high-growth sectors.</p><div class="cfoot"><a href="https://www.thehindubusinessline.com/news/education/symbiosis-launches-asias-first-unesco-chair-on-gender-inclusion-in-skills/article70906161.ece" class="rl" target="_blank" rel="noopener">Read &#8594;</a><button class="sbtn" onclick="save(this)">&#128278;</button></div></div></article></div></div>
   </section>
   <div class="divider"></div>
   <div class="nlsec vis nlband">
-    <p class="nley">📬 Free Daily Newsletter</p>
+    <p class="nley">&#128236; Free Daily Newsletter</p>
     <h2 class="nlt">Stay ahead of the story</h2>
     <p class="nls">Top 5 stories every morning at 8am PST. No noise — just what matters.</p>
-    <div class="nlf"><input class="nli" type="email" placeholder="your@email.com"/><button class="nlb" onclick="subscribe()">Subscribe →</button></div>
-    <p class="nlnote">Join 42,000+ readers · Unsubscribe anytime</p>
+    <div class="nlf"><input class="nli" type="email" placeholder="your@email.com"/><button class="nlb" onclick="subscribe()">Subscribe &#8594;</button></div>
+    <p class="nlnote">Join 42,000+ readers &middot; Unsubscribe anytime</p>
   </div>
   <section class="nsec vis" data-cat="mkt">
-    <div class="sh"><div class="si mkt">📈</div><h2 class="stitle">Markets</h2></div>
-    <div class="cgrid">
-      <article class="card-hero fi-card"><div class="iw"><img src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80" alt="MARKETS" loading="lazy"/><span class="bdg m">MARKETS</span></div><div class="cb"><div><div class="cmeta"><span class="src">Yahoo Entertainment</span><span class="rt">⏱ 2 min read</span></div><h3 class="ctitle">Oracle Corporation (ORCL): A Safe Stock for Beginners?</h3><p class="cex">We just covered the 15 Safe Stocks to Invest In For Beginners and Oracle Corporation (NYSE:ORCL) ranks 13th on this list. As a dominant provider of database ...</p></div><div class="cfoot"><a href="https://finance.yahoo.com/markets/stocks/articles/oracle-corporation-orcl-safe-stock-165110463.html" class="rl" target="_blank" rel="noopener">Read Article →</a><button class="sbtn" onclick="save(this)">🔖</button></div></div></article>
-      <div class="crow"><article class="cs fi-card"><div class="iw"><img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=600&q=80" alt="MARKETS" loading="lazy"/><span class="bdg m">MARKETS</span></div><div class="cb"><div class="cmeta"><span class="src">Financial Post</span><span class="rt">⏱ 3 min read</span></div><h3 class="ctitle">Sonor Investments Limited Reports Financial Results for the Year Ended December 31, 2025</h3><p class="cex">TORONTO, April 24, 2026 (GLOBE NEWSWIRE) — Sonor Investments Limited (TSX VENTURE:SNI.PR.A) today reported its financial results for the year ended December 31,</p><div class="cfoot"><a href="https://financialpost.com/globe-newswire/sonor-investments-limited-reports-financial-results-for-the-year-ended-december-31-2025" class="rl" target="_blank" rel="noopener">Read →</a><button class="sbtn" onclick="save(this)">🔖</button></div></div></article><article class="cs fi-card"><div class="iw"><img src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&q=80" alt="MARKETS" loading="lazy"/><span class="bdg m">MARKETS</span></div><div class="cb"><div class="cmeta"><span class="src">Financial Post</span><span class="rt">⏱ 4 min read</span></div><h3 class="ctitle">Vanguard Announces Cash Distributions for the Vanguard ETFs</h3><p class="cex">(VBU, VBG, VGAB, VAB, VSB, VSC, VCB, VGV, VLB, VRIF and VVSG) TORONTO, April 24, 2026 (GLOBE NEWSWIRE) — Vanguard Investments Canada Inc. today announced the fi</p><div class="cfoot"><a href="https://financialpost.com/globe-newswire/vanguard-announces-cash-distributions-for-the-vanguard-etfs-111" class="rl" target="_blank" rel="noopener">Read →</a><button class="sbtn" onclick="save(this)">🔖</button></div></div></article></div>
-    </div>
+    <div class="sh"><div class="si mkt">&#128200;</div><h2 class="stitle">Markets</h2></div>
+    <div class="cgrid"><article class="card-hero fi-card"><div class="iw"><img src="https://images.unsplash.com/photo-1640340434855-6084b1f4901c?w=800&q=80" alt="MARKETS" loading="lazy"/><span class="bdg m">MARKETS</span></div><div class="cb"><div><div class="cmeta"><span class="src">USA Today</span><span class="rt">&#9201; 2 min read</span></div><h3 class="ctitle">Oklahoma Sooners OL drafted by Houston Texans</h3><p class="cex">Former OU OL chosen by Houston Texans in 2026 NFL Draft.</p></div><div class="cfoot"><a href="https://soonerswire.usatoday.com/story/sports/college/sooners/football/2026/04/25/oklahoma-football-febechi-nwaiwu-houston-texans-nfl-draft/89793813007/" class="rl" target="_blank" rel="noopener">Read Article &#8594;</a><button class="sbtn" onclick="save(this)">&#128278;</button></div></div></article><div class="crow"><article class="cs fi-card"><div class="iw"><img src="https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=800&q=80" alt="MARKETS" loading="lazy"/><span class="bdg m">MARKETS</span></div><div class="cb"><div class="cmeta"><span class="src">BusinessLine</span><span class="rt">&#9201; 3 min read</span></div><h3 class="ctitle">Peak-cycle buybacks haunt India’s IT giants</h3><p class="cex">Just seven months ago, the Infosys management had announced a ₹18,000-cr buyback at a price 56 per cent above current levels</p><div class="cfoot"><a href="https://www.thehindubusinessline.com/portfolio/peak-cycle-buybacks-haunt-indias-it-giants/article70906358.ece" class="rl" target="_blank" rel="noopener">Read &#8594;</a><button class="sbtn" onclick="save(this)">&#128278;</button></div></div></article><article class="cs fi-card"><div class="iw"><img src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80" alt="MARKETS" loading="lazy"/><span class="bdg m">MARKETS</span></div><div class="cb"><div class="cmeta"><span class="src">BusinessLine</span><span class="rt">&#9201; 4 min read</span></div><h3 class="ctitle">Tech Query: NMDC, IDBI Bank, GNA Axles, Ganesh Housing</h3><p class="cex">We zoom in on the prospects of NMDC, as also the prospects of three other stocks — IDBI Bank, GNA Axles and Ganesh Housing</p><div class="cfoot"><a href="https://www.thehindubusinessline.com/portfolio/technical-analysis/tech-query-nmdc-idbi-bank-gna-axles-ganesh-housing-what-is-the-outlook-where-are-these-stocks-headed/article70902639.ece" class="rl" target="_blank" rel="noopener">Read &#8594;</a><button class="sbtn" onclick="save(this)">&#128278;</button></div></div></article></div></div>
   </section>
   <div class="divider"></div>
   <section class="nsec vis" data-cat="geo">
-    <div class="sh"><div class="si geo">🌍</div><h2 class="stitle">Geopolitics</h2></div>
-    <div class="cgrid">
-      <article class="card-hero fi-card"><div class="iw"><img src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?w=800&q=80" alt="WORLD" loading="lazy"/><span class="bdg g">WORLD</span></div><div class="cb"><div><div class="cmeta"><span class="src">The Week Magazine</span><span class="rt">⏱ 2 min read</span></div><h3 class="ctitle">John Ternus: Apple’s next CEO to lead its AI future</h3><p class="cex">He will build on the legacies of Steve Jobs and Tim Cook</p></div><div class="cfoot"><a href="https://theweek.com/tech/john-ternus-apple-ceo-ai" class="rl" target="_blank" rel="noopener">Read Article →</a><button class="sbtn" onclick="save(this)">🔖</button></div></div></article>
-      <div class="crow"><article class="cs fi-card"><div class="iw"><img src="https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=600&q=80" alt="GLOBAL" loading="lazy"/><span class="bdg g">GLOBAL</span></div><div class="cb"><div class="cmeta"><span class="src">Slashdot.org</span><span class="rt">⏱ 3 min read</span></div><h3 class="ctitle">'Summer House' Reunion Audio Leak: Bravo Launches Investigation</h3><p class="cex">'Summer House' Reunion Audio Leak: Bravo Launches InvestigationThe Hollywood Reporter Ciara Miller Calls Amanda Batula a 'Silent' but 'Deadly' Snake in Leaked A</p><div class="cfoot"><a href="https://slashdot.org/firehose.pl?op=view&amp;id=182330586" class="rl" target="_blank" rel="noopener">Read →</a><button class="sbtn" onclick="save(this)">🔖</button></div></div></article><article class="cs fi-card"><div class="iw"><img src="https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&q=80" alt="GLOBAL" loading="lazy"/><span class="bdg g">GLOBAL</span></div><div class="cb"><div class="cmeta"><span class="src">CBC News</span><span class="rt">⏱ 4 min read</span></div><h3 class="ctitle">2-time French Open champ Alcaraz won't defend title after further testing on injured wrist</h3><p class="cex">Two-time defending champion Carlos Alcaraz won't attempt to defend his French Open title due to a right wrist injury.</p><div class="cfoot"><a href="https://www.cbc.ca/sports/tennis/carlos-alcaraz-withdrawal-french-open-wrist-injury-tennis-9.7176270" class="rl" target="_blank" rel="noopener">Read →</a><button class="sbtn" onclick="save(this)">🔖</button></div></div></article></div>
-    </div>
+    <div class="sh"><div class="si geo">&#127758;</div><h2 class="stitle">Geopolitics</h2></div>
+    <div class="cgrid"><article class="card-hero fi-card"><div class="iw"><img src="https://images.unsplash.com/photo-1568515045052-f9a854d70bfd?w=800&q=80" alt="WORLD" loading="lazy"/><span class="bdg g">WORLD</span></div><div class="cb"><div><div class="cmeta"><span class="src">Bleeding Cool News</span><span class="rt">&#9201; 2 min read</span></div><h3 class="ctitle">McFarlane Toys&#39; DC Comics Red Platinum Edition Aztek Debuts</h3><p class="cex">McFarlane Toys is digging a bit deeper into the DC Comics roster with its latest DC Multiverse reveals, like bringing Aztek into the spotlight. Introduced in Aztek: The Ultimate Man #1 back in 1996, Uno was raised by the</p></div><div class="cfoot"><a href="https://bleedingcool.com/collectibles/mcfarlane-toys-dc-comics-red-platinum-edition-aztek-debuts/" class="rl" target="_blank" rel="noopener">Read Article &#8594;</a><button class="sbtn" onclick="save(this)">&#128278;</button></div></div></article><div class="crow"><article class="cs fi-card"><div class="iw"><img src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?w=800&q=80" alt="GLOBAL" loading="lazy"/><span class="bdg g">GLOBAL</span></div><div class="cb"><div class="cmeta"><span class="src">Slashdot.org</span><span class="rt">&#9201; 3 min read</span></div><h3 class="ctitle">Trump cancels envoys&#39; trip to Pakistan for Iran talks</h3><p class="cex">Trump cancels envoys&#39; trip to Pakistan for Iran talksAxios Iran War Live Updates: Trump Calls Off Witkoff and Kushner’s Travel to Pakistan for Peace TalksThe Ne</p><div class="cfoot"><a href="https://slashdot.org/firehose.pl?op=view&amp;id=182860092" class="rl" target="_blank" rel="noopener">Read &#8594;</a><button class="sbtn" onclick="save(this)">&#128278;</button></div></div></article><article class="cs fi-card"><div class="iw"><img src="https://images.unsplash.com/photo-1522661067900-ab829854a57f?w=800&q=80" alt="GLOBAL" loading="lazy"/><span class="bdg g">GLOBAL</span></div><div class="cb"><div class="cmeta"><span class="src">Rolling Stone</span><span class="rt">&#9201; 4 min read</span></div><h3 class="ctitle">Where to Watch the 2026 White House Correspondents Dinner Livestream Online for Free</h3><p class="cex">President Trump is expected to be in attendance at the WHCD tonight for the first time. Here&#39;s where to find a livestream to watch the event online.</p><div class="cfoot"><a href="http://www.rollingstone.com/product-recommendations/streaming/watch-white-house-correspondents-dinner-2026-livestream-free-1235553689/" class="rl" target="_blank" rel="noopener">Read &#8594;</a><button class="sbtn" onclick="save(this)">&#128278;</button></div></div></article></div></div>
   </section>
   <div class="divider"></div>
   <section class="nsec vis" data-cat="fash">
-    <div class="sh"><div class="si fash">✨</div><h2 class="stitle">Fashion</h2></div>
-    <div class="cgrid">
-      <article class="card-hero fi-card"><div class="iw"><img src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=800&q=80" alt="FASHION" loading="lazy"/><span class="bdg f">FASHION</span></div><div class="cb"><div><div class="cmeta"><span class="src">Wccftech</span><span class="rt">⏱ 2 min read</span></div><h3 class="ctitle">Xbox CEO Won’t Commit to Exclusives Just Yet, but Insists Gen9 Will Deliver a “First-Class” Console Experience</h3><p class="cex">This week has been a big one for the Xbox brand. Just a few days ago, recently appointed chief executive officer Asha Sharma confirmed that Game Pass Ultimate would be getting a price decrease, and followed up that news </p></div><div class="cfoot"><a href="https://wccftech.com/xbox-ceo-sidesteps-exclusives-question-promises-first-class-gen9-console-experience/" class="rl" target="_blank" rel="noopener">Read Article →</a><button class="sbtn" onclick="save(this)">🔖</button></div></div></article>
-      <div class="crow"><article class="cs fi-card"><div class="iw"><img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&q=80" alt="STYLE" loading="lazy"/><span class="bdg f">STYLE</span></div><div class="cb"><div class="cmeta"><span class="src">Bringatrailer.com</span><span class="rt">⏱ 3 min read</span></div><h3 class="ctitle">392 Stroker-Powered Superformance MKIII 5-Speed at No Reserve</h3><p class="cex">This Superformance MKIII Cobra replica was initially delivered to Dynamic Motorsports in Ross, Ohio, and the 392ci Windsor V8 and Tremec TKO five-speed manual t</p><div class="cfoot"><a href="https://bringatrailer.com/listing/superformance-mkiii-61/" class="rl" target="_blank" rel="noopener">Read →</a><button class="sbtn" onclick="save(this)">🔖</button></div></div></article><article class="cs fi-card"><div class="iw"><img src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=600&q=80" alt="STYLE" loading="lazy"/><span class="bdg f">STYLE</span></div><div class="cb"><div class="cmeta"><span class="src">The Big Lead</span><span class="rt">⏱ 4 min read</span></div><h3 class="ctitle">3 burning questions for New York Rangers entering 2026 offseason</h3><p class="cex">The New York Rangers had a rough season after trying to retool over the 2025 offseason. Here are some questions entering their offseason.</p><div class="cfoot"><a href="https://www.thebiglead.com/3-major-questions-new-york-rangers-entering-2026-offseason/" class="rl" target="_blank" rel="noopener">Read →</a><button class="sbtn" onclick="save(this)">🔖</button></div></div></article></div>
-    </div>
+    <div class="sh"><div class="si fash">&#10024;</div><h2 class="stitle">Fashion</h2></div>
+    <div class="cgrid"><article class="card-hero fi-card"><div class="iw"><img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80" alt="FASHION" loading="lazy"/><span class="bdg f">FASHION</span></div><div class="cb"><div><div class="cmeta"><span class="src">Onefootball.com</span><span class="rt">&#9201; 2 min read</span></div><h3 class="ctitle">Arsenal set new goals record & bring up PL landmark in style </h3><p class="cex">Arsenal made a blistering start in Saturday&#39;s Premier League clash with Newcastle at the Emirates. The Gunners knew that a win over the Magpies would take them back to the Premier League summit.And Mi...</p></div><div class="cfoot"><a href="https://onefootball.com/en/news/arsenal-set-new-goals-record-bring-up-pl-landmark-in-style-42767345" class="rl" target="_blank" rel="noopener">Read Article &#8594;</a><button class="sbtn" onclick="save(this)">&#128278;</button></div></div></article><div class="crow"><article class="cs fi-card"><div class="iw"><img src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&q=80" alt="STYLE" loading="lazy"/><span class="bdg f">STYLE</span></div><div class="cb"><div class="cmeta"><span class="src">USA Today</span><span class="rt">&#9201; 3 min read</span></div><h3 class="ctitle">No. 1 UCLA baseball escapes the Hornets with shocking walk-off finish</h3><p class="cex">No. 1 UCLA baseball won their Sacramento State series opener 6-5 with two runs coming in the bottom of the ninth.</p><div class="cfoot"><a href="https://uclawire.usatoday.com/story/sports/college/ucla/baseball/2026/04/25/no-1-ucla-baseball-walks-off-sacramento-state-in-6-5-friday-college-baseball/89793012007/" class="rl" target="_blank" rel="noopener">Read &#8594;</a><button class="sbtn" onclick="save(this)">&#128278;</button></div></div></article><article class="cs fi-card"><div class="iw"><img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&q=80" alt="STYLE" loading="lazy"/><span class="bdg f">STYLE</span></div><div class="cb"><div class="cmeta"><span class="src">Pypi.org</span><span class="rt">&#9201; 4 min read</span></div><h3 class="ctitle">reconsadfc added to PyPI</h3><p class="cex">Forensic event reconstruction and timeline correlation for SADFC-style data</p><div class="cfoot"><a href="https://pypi.org/project/reconsadfc/" class="rl" target="_blank" rel="noopener">Read &#8594;</a><button class="sbtn" onclick="save(this)">&#128278;</button></div></div></article></div></div>
   </section>
 </div>
 <aside class="sidebar">
   <div class="scard">
-    <h3 class="sc-title">📊 Markets Snapshot</h3>
+    <h3 class="sc-title">&#128202; Markets Snapshot</h3>
     <div>
-      <div class="mkt-row"><div><div class="mn">S&amp;P 500</div><div class="mt">SPX</div></div><div><div class="mv">5,363</div><div class="mc dn">▼ −3.5%</div></div></div>
-      <div class="mkt-row"><div><div class="mn">NASDAQ</div><div class="mt">COMP</div></div><div><div class="mv">16,387</div><div class="mc dn">▼ −4.1%</div></div></div>
-      <div class="mkt-row"><div><div class="mn">Bitcoin</div><div class="mt">BTC</div></div><div><div class="mv">$82,400</div><div class="mc dn">▼ −1.8%</div></div></div>
-      <div class="mkt-row"><div><div class="mn">Gold</div><div class="mt">XAU</div></div><div><div class="mv">$3,238</div><div class="mc up">▲ +1.9%</div></div></div>
-      <div class="mkt-row"><div><div class="mn">Oil (WTI)</div><div class="mt">crude</div></div><div><div class="mv">$61.10</div><div class="mc dn">▼ −2.1%</div></div></div>
+      <div class="mkt-row"><div><div class="mn">S&amp;P 500</div><div class="mt">SPX</div></div><div><div class="mv">5,282</div><div class="mc dn">&#9660; &minus;2.1%</div></div></div>
+      <div class="mkt-row"><div><div class="mn">NASDAQ</div><div class="mt">COMP</div></div><div><div class="mv">16,104</div><div class="mc dn">&#9660; &minus;2.6%</div></div></div>
+      <div class="mkt-row"><div><div class="mn">Bitcoin</div><div class="mt">BTC</div></div><div><div class="mv">$84,200</div><div class="mc up">&#9650; +0.9%</div></div></div>
+      <div class="mkt-row"><div><div class="mn">Gold</div><div class="mt">XAU</div></div><div><div class="mv">$3,341</div><div class="mc up">&#9650; +2.3%</div></div></div>
+      <div class="mkt-row"><div><div class="mn">Oil (WTI)</div><div class="mt">crude</div></div><div><div class="mv">$65.40</div><div class="mc up">&#9650; +4.1%</div></div></div>
     </div>
   </div>
   <div class="scard">
-    <h3 class="sc-title">🔥 Most Read Today</h3>
-    <ul class="tlist"><li class="ti"><span class="tnum">01</span><div><div class="tcat">AI & Tech</div><div class="th">Mount Sinai Health System and Guyana Ministry of Health Host Seminar o</div></div></li><li class="ti"><span class="tnum">02</span><div><div class="tcat">AI & Tech</div><div class="th">Bragar Eagel & Squire, P.C. Reminds Concorde International Group Ltd. </div></div></li><li class="ti"><span class="tnum">03</span><div><div class="tcat">Markets</div><div class="th">Oracle Corporation (ORCL): A Safe Stock for Beginners?</div></div></li><li class="ti"><span class="tnum">04</span><div><div class="tcat">Markets</div><div class="th">Sonor Investments Limited Reports Financial Results for the Year Ended</div></div></li><li class="ti"><span class="tnum">05</span><div><div class="tcat">Geopolitics</div><div class="th">John Ternus: Apple’s next CEO to lead its AI future</div></div></li></ul>
+    <h3 class="sc-title">&#128293; Most Read Today</h3>
+    <ul class="tlist"><li class="ti"><span class="tnum">01</span><div><div class="tcat">AI & Tech</div><div class="th">SpaceX XAI 2027</div></div></li><li class="ti"><span class="tnum">02</span><div><div class="tcat">AI & Tech</div><div class="th"> A boost for the relegation battle? HSV fans unveil epic tifo</div></div></li><li class="ti"><span class="tnum">03</span><div><div class="tcat">Markets</div><div class="th">Oklahoma Sooners OL drafted by Houston Texans</div></div></li><li class="ti"><span class="tnum">04</span><div><div class="tcat">Markets</div><div class="th">Peak-cycle buybacks haunt India’s IT giants</div></div></li><li class="ti"><span class="tnum">05</span><div><div class="tcat">Geopolitics</div><div class="th">McFarlane Toys' DC Comics Red Platinum Edition Aztek Debuts</div></div></li></ul>
   </div>
   <div class="scard" style="background:linear-gradient(135deg,#0d1117,#1e1060);border-color:transparent">
-    <p style="font-size:.63rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--pink);margin-bottom:5px">📬 Newsletter</p>
+    <p style="font-size:.63rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--pink);margin-bottom:5px">&#128236; Newsletter</p>
     <p style="font-family:'DM Serif Display',serif;font-size:1rem;color:#fff;margin-bottom:5px">5 stories. Every morning.</p>
     <p style="font-size:.74rem;color:#6b7280;margin-bottom:13px;line-height:1.5">Updated daily at 8am PST.</p>
     <input type="email" placeholder="your@email.com" style="width:100%;padding:8px 12px;border-radius:8px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:#fff;font-family:'DM Sans',sans-serif;font-size:.78rem;outline:none;margin-bottom:7px"/>
-    <button onclick="subscribe()" style="width:100%;background:var(--pink);color:#fff;border:none;border-radius:8px;padding:8px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer">Subscribe Free →</button>
+    <button onclick="subscribe()" style="width:100%;background:var(--pink);color:#fff;border:none;border-radius:8px;padding:8px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer">Subscribe Free &#8594;</button>
   </div>
 </aside>
 </div>
@@ -260,44 +234,44 @@
     <div class="ft">
       <div class="fb">
         <a href="#" class="logo"><div class="logo-sq"></div><span class="logo-txt">Daily Digest</span></a>
-        <p>Your news, beautifully illustrated. AI, markets, geopolitics & fashion — refreshed every morning at 8am PST.</p>
+        <p>Your news, beautifully illustrated. AI, markets, geopolitics &amp; fashion — refreshed every morning at 8am PST.</p>
       </div>
-      <div><p class="fct">Sections</p><ul class="flinks"><li><a href="#">🤖 AI &amp; Tech</a></li><li><a href="#">📈 Markets</a></li><li><a href="#">🌍 Geopolitics</a></li><li><a href="#">✨ Fashion</a></li></ul></div>
+      <div><p class="fct">Sections</p><ul class="flinks"><li><a href="#">&#129302; AI &amp; Tech</a></li><li><a href="#">&#128200; Markets</a></li><li><a href="#">&#127758; Geopolitics</a></li><li><a href="#">&#10024; Fashion</a></li></ul></div>
       <div><p class="fct">Company</p><ul class="flinks"><li><a href="#">About</a></li><li><a href="#">Newsletter</a></li><li><a href="#">Privacy</a></li><li><a href="#">Contact</a></li></ul></div>
     </div>
     <div class="fbot">
-      <p class="fcopy">© 2026 <span>Daily Digest</span> · Updated daily at 8am PST</p>
-      <div class="soc"><a class="socbtn" href="#">𝕏</a><a class="socbtn" href="#">📸</a><a class="socbtn" href="#">in</a><a class="socbtn" href="#">📡</a></div>
+      <p class="fcopy">&copy; 2026 <span>Daily Digest</span> &middot; Updated daily at 8am PST</p>
+      <div class="soc"><a class="socbtn" href="#">&#120143;</a><a class="socbtn" href="#">&#128248;</a><a class="socbtn" href="#">in</a><a class="socbtn" href="#">&#128225;</a></div>
     </div>
   </div>
 </footer>
 <div class="moverlay" id="mo" onclick="cmo(event)">
   <div class="modal">
-    <button class="mcls" onclick="closeModal()">✕</button>
-    <div class="mem">📬</div>
+    <button class="mcls" onclick="closeModal()">&#10005;</button>
+    <div class="mem">&#128236;</div>
     <h2>Get the Daily Digest</h2>
     <p>5 hand-picked stories every morning. Join 42,000+ readers.</p>
     <input class="minp" type="email" placeholder="your@email.com"/>
-    <button class="mbtn" onclick="subscribe()">Subscribe for Free →</button>
+    <button class="mbtn" onclick="subscribe()">Subscribe for Free &#8594;</button>
     <p style="font-size:.68rem;color:var(--tx3);margin-top:9px;text-align:center">No spam. Unsubscribe anytime.</p>
   </div>
 </div>
 <div class="toast" id="toast"></div>
 <script>
-  const t=localStorage.getItem('dd-theme')||'light';
-  document.documentElement.setAttribute('data-theme',t);
-  document.getElementById('themeBtn').textContent=t==='dark'?'☀️':'🌙';
-  function toggleTheme(){const n=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);localStorage.setItem('dd-theme',n);document.getElementById('themeBtn').textContent=n==='dark'?'☀️':'🌙';toast(n==='dark'?'🌙 Dark mode on':'☀️ Light mode on')}
-  function filter(cat,btn){document.querySelectorAll('.pill').forEach(p=>p.classList.remove('on'));btn.classList.add('on');document.querySelectorAll('.nsec').forEach(s=>s.classList.toggle('vis',cat==='all'||s.dataset.cat===cat));const nl=document.querySelector('.nlsec');if(nl)nl.classList.toggle('vis',cat==='all')}
-  function save(b){b.classList.toggle('saved');toast(b.classList.contains('saved')?'🔖 Article saved!':'Removed from saved')}
-  function subscribe(){closeModal();toast('🎉 You're subscribed! Check your inbox.')}
-  function openModal(){document.getElementById('mo').classList.add('open')}
-  function closeModal(){document.getElementById('mo').classList.remove('open')}
-  function cmo(e){if(e.target.id==='mo')closeModal()}
-  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
-  let tt;
-  function toast(m){const el=document.getElementById('toast');el.textContent=m;el.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>el.classList.remove('show'),2800)}
-  window.addEventListener('scroll',()=>{const h=document.documentElement.scrollHeight-window.innerHeight;document.getElementById('prog').style.width=(h>0?(scrollY/h)*100:0)+'%'});
-</script>
+    const t=localStorage.getItem('dd-theme')||'light';
+    document.documentElement.setAttribute('data-theme',t);
+    document.getElementById('themeBtn').textContent=t==='dark'?'☀️':'🌙';
+    function toggleTheme(){const n=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);localStorage.setItem('dd-theme',n);document.getElementById('themeBtn').textContent=n==='dark'?'☀️':'🌙';toast(n==='dark'?'🌙 Dark mode on':'☀️ Light mode on')}
+    function filter(cat,btn){document.querySelectorAll('.pill').forEach(p=>p.classList.remove('on'));btn.classList.add('on');document.querySelectorAll('.nsec').forEach(s=>s.classList.toggle('vis',cat==='all'||s.dataset.cat===cat));const nl=document.querySelector('.nlsec');if(nl)nl.classList.toggle('vis',cat==='all')}
+    function save(b){b.classList.toggle('saved');toast(b.classList.contains('saved')?'🔖 Article saved!':'Removed from saved')}
+    function subscribe(){closeModal();toast('🎉 You are subscribed! Check your inbox.')}
+    function openModal(){document.getElementById('mo').classList.add('open')}
+    function closeModal(){document.getElementById('mo').classList.remove('open')}
+    function cmo(e){if(e.target.id==='mo')closeModal()}
+    document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+    let tt;
+    function toast(m){const el=document.getElementById('toast');el.textContent=m;el.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>el.classList.remove('show'),2800)}
+    window.addEventListener('scroll',()=>{const h=document.documentElement.scrollHeight-window.innerHeight;document.getElementById('prog').style.width=(h>0?(scrollY/h)*100:0)+'%'});
+    </script>
 </body>
 </html>
