@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Daily Digest — auto news updater
-Runs every day at 8am PST via GitHub Actions.
+Uses the real article image (urlToImage) from each news source.
+Falls back to a relevant Unsplash image only if no image is available.
 """
 import os, json, random, urllib.request, urllib.parse
 from datetime import datetime, timezone, timedelta
@@ -12,115 +13,111 @@ TODAY   = datetime.now(PST).strftime("%B %d, %Y")
 SEED    = int(datetime.now(PST).strftime("%Y%m%d"))
 random.seed(SEED)
 
-ALL_IMAGES = {
+# Fallback images per category — only used when article has no image
+FALLBACK_IMAGES = {
     "tech": [
-        "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&q=80",
         "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=800&q=80",
-        "https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=800&q=80",
-        "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&q=80",
-        "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80",
         "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80",
-        "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=800&q=80",
         "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=800&q=80",
+        "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=800&q=80",
+        "https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=800&q=80",
     ],
     "stocks": [
         "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80",
-        "https://images.unsplash.com/photo-1559526324-593bc073d938?w=800&q=80",
-        "https://images.unsplash.com/photo-1640340434855-6084b1f4901c?w=800&q=80",
-        "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80",
         "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=800&q=80",
         "https://images.unsplash.com/photo-1579621970795-87facc2f976d?w=800&q=80",
+        "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80",
         "https://images.unsplash.com/photo-1535320903710-d993d3d77d29?w=800&q=80",
-        "https://images.unsplash.com/photo-1631897642057-8f1e9bed28e6?w=800&q=80",
     ],
     "geo": [
-        "https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?w=800&q=80",
-        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=800&q=80",
-        "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=800&q=80",
-        "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=800&q=80",
-        "https://images.unsplash.com/photo-1522661067900-ab829854a57f?w=800&q=80",
-        "https://images.unsplash.com/photo-1495020689067-958852a7765e?w=800&q=80",
         "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80",
-        "https://images.unsplash.com/photo-1568515045052-f9a854d70bfd?w=800&q=80",
+        "https://images.unsplash.com/photo-1495020689067-958852a7765e?w=800&q=80",
+        "https://images.unsplash.com/photo-1522661067900-ab829854a57f?w=800&q=80",
+        "https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?w=800&q=80",
+        "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=800&q=80",
     ],
     "fashion": [
         "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=800&q=80",
-        "https://images.unsplash.com/photo-1445205170230-053b83016050?w=800&q=80",
-        "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80",
-        "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&q=80",
-        "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&q=80",
-        "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80",
         "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&q=80",
+        "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80",
+        "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&q=80",
         "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=800&q=80",
     ],
 }
 
 QUERIES = {
-    "tech":    {"q": "artificial intelligence OR technology", "language": "en", "sortBy": "publishedAt", "pageSize": "4"},
-    "stocks":  {"q": "stock market OR economy OR finance OR tariffs", "language": "en", "sortBy": "publishedAt", "pageSize": "4"},
-    "geo":     {"q": "geopolitics OR war OR diplomacy OR world news", "language": "en", "sortBy": "publishedAt", "pageSize": "4"},
-    "fashion": {"q": "fashion OR style OR luxury OR clothing", "language": "en", "sortBy": "publishedAt", "pageSize": "4"},
+    "tech":    {"q": "artificial intelligence OR technology", "language": "en", "sortBy": "publishedAt", "pageSize": "6"},
+    "stocks":  {"q": "stock market OR economy OR finance OR tariffs", "language": "en", "sortBy": "publishedAt", "pageSize": "6"},
+    "geo":     {"q": "geopolitics OR war OR diplomacy OR world news", "language": "en", "sortBy": "publishedAt", "pageSize": "6"},
+    "fashion": {"q": "fashion OR style OR luxury OR clothing", "language": "en", "sortBy": "publishedAt", "pageSize": "6"},
 }
 
 FALLBACK = {
     "tech": [
         {"title": "Meta's Muse Spark arrives — ending the company's open-source AI era",
          "description": "Meta's first proprietary AI model since its $14.3B Scale AI deal rolls out across Facebook, Instagram, WhatsApp and Ray-Ban glasses with a deep-reasoning Contemplating mode.",
-         "url": "https://www.cnbc.com/2026/04/08/meta-debuts-first-major-ai-model-since-14-billion-deal-to-bring-in-alexandr-wang.html",
-         "source": {"name": "CNBC"}, "read_time": "5 min read"},
+         "url": "https://www.cnbc.com", "source": {"name": "CNBC"}, "read_time": "5 min read",
+         "image": "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=800&q=80"},
         {"title": "Big Tech races to lock in nuclear power deals for AI data centers",
          "description": "Microsoft, Google and Amazon are signing long-term nuclear energy contracts as AI infrastructure demand outpaces grid capacity.",
-         "url": "#", "source": {"name": "Wired"}, "read_time": "3 min read"},
+         "url": "#", "source": {"name": "Wired"}, "read_time": "3 min read",
+         "image": "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80"},
         {"title": "Gucci and Google announce luxury AI smart glasses launching 2027",
          "description": "Kering CEO confirmed the Gucci-branded device will combine the house's iconic aesthetics with Google AI, intensifying rivalry with Meta's Ray-Ban line.",
-         "url": "#", "source": {"name": "Logos Press"}, "read_time": "3 min read"},
+         "url": "#", "source": {"name": "Logos Press"}, "read_time": "3 min read",
+         "image": "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=800&q=80"},
     ],
     "stocks": [
         {"title": "Markets tumble as Iran shuts Strait of Hormuz — oil surges 4%",
-         "description": "Wall Street fell sharply after Iran closed the vital shipping lane following a US Navy seizure of an Iranian cargo ship. Gold hit fresh highs as investors sought safe havens.",
-         "url": "#", "source": {"name": "Bloomberg"}, "read_time": "5 min read"},
+         "description": "Wall Street fell sharply after Iran closed the vital shipping lane. Gold hit fresh highs as investors sought safe havens.",
+         "url": "#", "source": {"name": "Bloomberg"}, "read_time": "5 min read",
+         "image": "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80"},
         {"title": "Trump ceasefire with Iran expires Wednesday — markets brace for volatility",
-         "description": "President Trump said it is highly unlikely he will extend the ceasefire, raising the prospect of renewed conflict and sustained energy price pressure.",
-         "url": "https://www.cnn.com/2026/04/20/world/live-news/iran-war-us-trump-israel",
-         "source": {"name": "CNN"}, "read_time": "4 min read"},
+         "description": "President Trump said it is highly unlikely he will extend the ceasefire, raising the prospect of renewed conflict and energy price pressure.",
+         "url": "#", "source": {"name": "CNN"}, "read_time": "4 min read",
+         "image": "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=800&q=80"},
         {"title": "OpenAI targets $1 trillion IPO — retail investors will get a slice",
-         "description": "CFO Sarah Friar confirmed OpenAI is laying groundwork for a US listing after individual investors committed more than $3B in its latest funding round.",
-         "url": "#", "source": {"name": "Reuters"}, "read_time": "3 min read"},
+         "description": "CFO Sarah Friar confirmed OpenAI is laying groundwork for a US listing after individual investors committed more than $3B in its latest round.",
+         "url": "#", "source": {"name": "Reuters"}, "read_time": "3 min read",
+         "image": "https://images.unsplash.com/photo-1579621970795-87facc2f976d?w=800&q=80"},
     ],
     "geo": [
         {"title": "Iran shuts Strait of Hormuz again after US seizes Iranian cargo ship",
-         "description": "Tehran closed the vital waterway one day after reopening it. Trump insists a deal is very close but Iran's Foreign Ministry says there are no active negotiations.",
-         "url": "https://www.democracynow.org/2026/4/20/headlines",
-         "source": {"name": "CNN / Democracy Now"}, "read_time": "5 min read"},
-        {"title": "Magnitude 7.7 earthquake strikes northern Japan — tsunami warning issued then lifted",
-         "description": "A powerful quake off Iwate prefecture shook buildings as far away as Tokyo before the tsunami alert was downgraded as waves stayed below 1 metre.",
-         "url": "https://www.aljazeera.com/news/2026/4/20/powerful-7-4-earthquake-strikes-northern-japan-tsunami-warning-issued",
-         "source": {"name": "Al Jazeera"}, "read_time": "3 min read"},
+         "description": "Tehran closed the vital waterway one day after reopening it. Trump insists a deal is very close but Iran says there are no active negotiations.",
+         "url": "#", "source": {"name": "CNN"}, "read_time": "5 min read",
+         "image": "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80"},
+        {"title": "Magnitude 7.7 earthquake strikes northern Japan — tsunami warning lifted",
+         "description": "A powerful quake off Iwate prefecture shook buildings as far away as Tokyo before the tsunami alert was downgraded.",
+         "url": "#", "source": {"name": "Al Jazeera"}, "read_time": "3 min read",
+         "image": "https://images.unsplash.com/photo-1522661067900-ab829854a57f?w=800&q=80"},
         {"title": "Orban concedes as Hungary opposition heads for historic supermajority",
-         "description": "Opposition leader Peter Magyar surged to a landslide result, signalling a major political realignment in one of the EU's most contested democracies.",
-         "url": "#", "source": {"name": "Fox News"}, "read_time": "4 min read"},
+         "description": "Opposition leader Peter Magyar surged to a landslide result, signalling a major political realignment in one of the EU's most watched democracies.",
+         "url": "#", "source": {"name": "Fox News"}, "read_time": "4 min read",
+         "image": "https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?w=800&q=80"},
     ],
     "fashion": [
         {"title": "AI is finally cracking fashion's biggest problem — the dreaded return",
-         "description": "AI startups including Catches are using physics-based digital twins to let shoppers see exactly how clothes fit, targeting a 20-30x ROI for luxury brands.",
-         "url": "https://www.cnbc.com/2026/04/05/ai-retail-start-ups-virtual-try-on-tech-margins.html",
-         "source": {"name": "CNBC"}, "read_time": "4 min read"},
+         "description": "AI startups are using physics-based digital twins to let shoppers see exactly how clothes fit, targeting a 20-30x ROI for luxury brands.",
+         "url": "#", "source": {"name": "CNBC"}, "read_time": "4 min read",
+         "image": "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=800&q=80"},
         {"title": "LVMH, Kering and Richemont re-examine brand portfolios amid margin squeeze",
          "description": "The three luxury conglomerates are restructuring store networks as rising tariffs, volatile demand, and AI disruption reshape the industry.",
-         "url": "#", "source": {"name": "Business of Fashion"}, "read_time": "5 min read"},
+         "url": "#", "source": {"name": "Business of Fashion"}, "read_time": "5 min read",
+         "image": "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&q=80"},
         {"title": "Quiet luxury holds firm as maximalism fades from the global runway",
          "description": "Milan and Paris confirmed precision tailoring, neutral palettes and understated silhouettes as the decade's defining aesthetic this season.",
-         "url": "#", "source": {"name": "Vogue"}, "read_time": "3 min read"},
+         "url": "#", "source": {"name": "Vogue"}, "read_time": "3 min read",
+         "image": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80"},
     ],
 }
 
 READ_TIMES = ["2 min read", "3 min read", "4 min read", "5 min read"]
 
 
-def get_images(cat):
-    pool = ALL_IMAGES[cat][:]
+def get_fallback_image(cat):
+    pool = FALLBACK_IMAGES[cat][:]
     random.shuffle(pool)
-    return pool[:3]
+    return pool[0]
 
 
 def fetch_articles(cat, params):
@@ -134,37 +131,50 @@ def fetch_articles(cat, params):
         req = urllib.request.Request(url, headers={"User-Agent": "DailyDigest/1.0"})
         with urllib.request.urlopen(req, timeout=10) as r:
             data = json.loads(r.read())
+
         articles = [
             a for a in data.get("articles", [])
-            if a.get("title") and a.get("description")
+            if a.get("title")
+            and a.get("description")
             and "[Removed]" not in a.get("title", "")
             and len(a.get("description", "")) > 40
         ]
+
         result = []
-        for i, a in enumerate(articles[:3]):
+        for i, a in enumerate(articles[:4]):
+            # Use the article's own image — fall back to category image if missing
+            img = a.get("urlToImage") or ""
+            # Skip images that are known to block hotlinking or are tiny tracking pixels
+            if not img or len(img) < 20 or "placeholder" in img.lower():
+                img = get_fallback_image(cat)
+
             result.append({
                 "title":       a["title"].split(" - ")[0][:120],
                 "description": (a.get("description") or "")[:220],
                 "url":         a.get("url", "#"),
                 "source":      a.get("source", {"name": "News"}),
                 "read_time":   READ_TIMES[i % len(READ_TIMES)],
+                "image":       img,
             })
+
         return result if len(result) >= 2 else FALLBACK[cat]
+
     except Exception as e:
         print(f"    API error ({cat}): {e} — using fallback")
         return FALLBACK[cat]
 
 
-def card_hero(art, img, bdg_cls, bdg_txt):
+def card_hero(art, bdg_cls, bdg_txt):
     src   = art.get("source", {}).get("name", "News")
     rt    = art.get("read_time", "4 min read")
     url   = art.get("url", "#")
+    img   = art.get("image", "")
     tgt   = 'target="_blank" rel="noopener"' if url != "#" else ""
     title = art["title"].replace('"', "&quot;").replace("'", "&#39;")
     desc  = art["description"].replace('"', "&quot;").replace("'", "&#39;")
     return (
         '<article class="card-hero fi-card">'
-        f'<div class="iw"><img src="{img}" alt="{bdg_txt}" loading="lazy"/>'
+        f'<div class="iw"><img src="{img}" alt="{bdg_txt}" loading="lazy" onerror="this.src=\'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80\'"/>'
         f'<span class="bdg {bdg_cls}">{bdg_txt}</span></div>'
         '<div class="cb"><div>'
         f'<div class="cmeta"><span class="src">{src}</span><span class="rt">&#9201; {rt}</span></div>'
@@ -177,16 +187,17 @@ def card_hero(art, img, bdg_cls, bdg_txt):
     )
 
 
-def card_small(art, img, bdg_cls, bdg_txt):
+def card_small(art, bdg_cls, bdg_txt):
     src   = art.get("source", {}).get("name", "News")
     rt    = art.get("read_time", "3 min read")
     url   = art.get("url", "#")
+    img   = art.get("image", "")
     tgt   = 'target="_blank" rel="noopener"' if url != "#" else ""
     title = art["title"].replace('"', "&quot;").replace("'", "&#39;")
     desc  = (art["description"][:160]).replace('"', "&quot;").replace("'", "&#39;")
     return (
         '<article class="cs fi-card">'
-        f'<div class="iw"><img src="{img}" alt="{bdg_txt}" loading="lazy"/>'
+        f'<div class="iw"><img src="{img}" alt="{bdg_txt}" loading="lazy" onerror="this.src=\'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80\'"/>'
         f'<span class="bdg {bdg_cls}">{bdg_txt}</span></div>'
         '<div class="cb">'
         f'<div class="cmeta"><span class="src">{src}</span><span class="rt">&#9201; {rt}</span></div>'
@@ -215,9 +226,8 @@ def make_trending(all_articles):
     for cat, arts in all_articles.items():
         for a in arts[:2]:
             t = a["title"][:68]
-            num = "0" + str(n)
             html += (
-                f'<li class="ti"><span class="tnum">{num}</span>'
+                f'<li class="ti"><span class="tnum">0{n}</span>'
                 f'<div><div class="tcat">{labels[cat]}</div>'
                 f'<div class="th">{t}</div></div></li>'
             )
@@ -230,32 +240,30 @@ def make_trending(all_articles):
 
 
 def build_html(all_articles):
-    imgs   = {cat: get_images(cat) for cat in all_articles}
-    tech   = all_articles["tech"]
-    stocks = all_articles["stocks"]
-    geo    = all_articles["geo"]
+    tech    = all_articles["tech"]
+    stocks  = all_articles["stocks"]
+    geo     = all_articles["geo"]
     fashion = all_articles["fashion"]
 
     ticker   = make_ticker(all_articles)
     trending = make_trending(all_articles)
 
-    t_hero  = card_hero(tech[0],    imgs["tech"][0],    "t", "AI &amp; TECH")
-    t_s1    = card_small(tech[1],   imgs["tech"][1],    "t", "TECH")
-    t_s2    = card_small(tech[2] if len(tech) > 2 else tech[1], imgs["tech"][2], "t", "TECH")
+    t_hero = card_hero(tech[0],    "t", "AI &amp; TECH")
+    t_s1   = card_small(tech[1],   "t", "TECH")
+    t_s2   = card_small(tech[2] if len(tech) > 2 else tech[1], "t", "TECH")
 
-    m_hero  = card_hero(stocks[0],  imgs["stocks"][0],  "m", "MARKETS")
-    m_s1    = card_small(stocks[1], imgs["stocks"][1],  "m", "MARKETS")
-    m_s2    = card_small(stocks[2] if len(stocks) > 2 else stocks[1], imgs["stocks"][2], "m", "MARKETS")
+    m_hero = card_hero(stocks[0],  "m", "MARKETS")
+    m_s1   = card_small(stocks[1], "m", "MARKETS")
+    m_s2   = card_small(stocks[2] if len(stocks) > 2 else stocks[1], "m", "MARKETS")
 
-    g_hero  = card_hero(geo[0],     imgs["geo"][0],     "g", "WORLD")
-    g_s1    = card_small(geo[1],    imgs["geo"][1],     "g", "GLOBAL")
-    g_s2    = card_small(geo[2] if len(geo) > 2 else geo[1], imgs["geo"][2], "g", "GLOBAL")
+    g_hero = card_hero(geo[0],     "g", "WORLD")
+    g_s1   = card_small(geo[1],    "g", "GLOBAL")
+    g_s2   = card_small(geo[2] if len(geo) > 2 else geo[1], "g", "GLOBAL")
 
-    f_hero  = card_hero(fashion[0], imgs["fashion"][0], "f", "FASHION")
-    f_s1    = card_small(fashion[1],imgs["fashion"][1], "f", "STYLE")
-    f_s2    = card_small(fashion[2] if len(fashion) > 2 else fashion[1], imgs["fashion"][2], "f", "STYLE")
+    f_hero = card_hero(fashion[0], "f", "FASHION")
+    f_s1   = card_small(fashion[1],"f", "STYLE")
+    f_s2   = card_small(fashion[2] if len(fashion) > 2 else fashion[1], "f", "STYLE")
 
-    # Write CSS and JS without f-string to avoid double-brace issues
     css = """
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{--navy:#0d1117;--pink:#ff2d78;--violet:#7c3aed;--vl:#a78bfa;--bg:#f0f2f7;--sur:#fff;--sur2:#f8f9fc;--bdr:#e5e7eb;--tx:#0d1117;--tx2:#6b7280;--tx3:#9ca3af;--sh:0 4px 24px rgba(0,0,0,.07);--sh2:0 16px 48px rgba(0,0,0,.14)}
@@ -412,131 +420,111 @@ def build_html(all_articles):
     window.addEventListener('scroll',()=>{const h=document.documentElement.scrollHeight-window.innerHeight;document.getElementById('prog').style.width=(h>0?(scrollY/h)*100:0)+'%'});
     """
 
-    return """<!DOCTYPE html>
-<html lang="en" data-theme="light">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Daily Digest – """ + TODAY + """</title>
-  <meta name="description" content="Today's top stories in AI, Markets, Geopolitics and Fashion — updated every morning at 8am PST."/>
-  <meta property="og:title" content="Daily Digest – """ + TODAY + """"/>
-  <meta property="og:description" content="Today's top stories in AI, Markets, Geopolitics and Fashion — beautifully illustrated."/>
-  <meta property="og:image" content="https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80"/>
-  <meta property="og:url" content="https://alonhaliva.github.io/daily-digest/"/>
-  <meta property="og:type" content="website"/>
-  <meta name="twitter:card" content="summary_large_image"/>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet"/>
-  <style>""" + css + """</style>
-</head>
-<body>
-<div id="prog"></div>
-<header>
-  <div class="hi">
-    <a href="#" class="logo"><div class="logo-sq"></div><span class="logo-txt">Daily Digest</span></a>
-    <div class="hr">
-      <span class="tagline">Your news, beautifully illustrated</span>
-      <span class="date-badge">&#128197; """ + TODAY + """</span>
-      <button class="btn-sub" onclick="openModal()">Subscribe Free</button>
-      <button class="btn-theme" id="themeBtn" onclick="toggleTheme()">&#127769;</button>
-    </div>
-  </div>
-</header>
-<div class="ticker-wrap">
-  <div class="ticker-label">&#128293; Breaking</div>
-  <div class="ticker-outer"><div class="ticker-track">""" + ticker + """</div></div>
-</div>
-<nav class="fbar">
-  <span class="flbl">Filter:</span>
-  <button class="pill on" onclick="filter('all',this)">&#128240; All News</button>
-  <button class="pill" onclick="filter('tech',this)">&#129302; AI &amp; Tech</button>
-  <button class="pill" onclick="filter('mkt',this)">&#128200; Markets</button>
-  <button class="pill" onclick="filter('geo',this)">&#127758; Geopolitics</button>
-  <button class="pill" onclick="filter('fash',this)">&#10024; Fashion</button>
-</nav>
-<div class="wrap">
-<div class="feed">
-  <section class="nsec vis" data-cat="tech">
-    <div class="sh"><div class="si tech">&#129302;</div><h2 class="stitle">AI &amp; Tech</h2></div>
-    <div class="cgrid">""" + t_hero + """<div class="crow">""" + t_s1 + t_s2 + """</div></div>
-  </section>
-  <div class="divider"></div>
-  <div class="nlsec vis nlband">
-    <p class="nley">&#128236; Free Daily Newsletter</p>
-    <h2 class="nlt">Stay ahead of the story</h2>
-    <p class="nls">Top 5 stories every morning at 8am PST. No noise — just what matters.</p>
-    <div class="nlf"><input class="nli" type="email" placeholder="your@email.com"/><button class="nlb" onclick="subscribe()">Subscribe &#8594;</button></div>
-    <p class="nlnote">Join 42,000+ readers &middot; Unsubscribe anytime</p>
-  </div>
-  <section class="nsec vis" data-cat="mkt">
-    <div class="sh"><div class="si mkt">&#128200;</div><h2 class="stitle">Markets</h2></div>
-    <div class="cgrid">""" + m_hero + """<div class="crow">""" + m_s1 + m_s2 + """</div></div>
-  </section>
-  <div class="divider"></div>
-  <section class="nsec vis" data-cat="geo">
-    <div class="sh"><div class="si geo">&#127758;</div><h2 class="stitle">Geopolitics</h2></div>
-    <div class="cgrid">""" + g_hero + """<div class="crow">""" + g_s1 + g_s2 + """</div></div>
-  </section>
-  <div class="divider"></div>
-  <section class="nsec vis" data-cat="fash">
-    <div class="sh"><div class="si fash">&#10024;</div><h2 class="stitle">Fashion</h2></div>
-    <div class="cgrid">""" + f_hero + """<div class="crow">""" + f_s1 + f_s2 + """</div></div>
-  </section>
-</div>
-<aside class="sidebar">
-  <div class="scard">
-    <h3 class="sc-title">&#128202; Markets Snapshot</h3>
-    <div>
-      <div class="mkt-row"><div><div class="mn">S&amp;P 500</div><div class="mt">SPX</div></div><div><div class="mv">5,282</div><div class="mc dn">&#9660; &minus;2.1%</div></div></div>
-      <div class="mkt-row"><div><div class="mn">NASDAQ</div><div class="mt">COMP</div></div><div><div class="mv">16,104</div><div class="mc dn">&#9660; &minus;2.6%</div></div></div>
-      <div class="mkt-row"><div><div class="mn">Bitcoin</div><div class="mt">BTC</div></div><div><div class="mv">$84,200</div><div class="mc up">&#9650; +0.9%</div></div></div>
-      <div class="mkt-row"><div><div class="mn">Gold</div><div class="mt">XAU</div></div><div><div class="mv">$3,341</div><div class="mc up">&#9650; +2.3%</div></div></div>
-      <div class="mkt-row"><div><div class="mn">Oil (WTI)</div><div class="mt">crude</div></div><div><div class="mv">$65.40</div><div class="mc up">&#9650; +4.1%</div></div></div>
-    </div>
-  </div>
-  <div class="scard">
-    <h3 class="sc-title">&#128293; Most Read Today</h3>
-    <ul class="tlist">""" + trending + """</ul>
-  </div>
-  <div class="scard" style="background:linear-gradient(135deg,#0d1117,#1e1060);border-color:transparent">
-    <p style="font-size:.63rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--pink);margin-bottom:5px">&#128236; Newsletter</p>
-    <p style="font-family:'DM Serif Display',serif;font-size:1rem;color:#fff;margin-bottom:5px">5 stories. Every morning.</p>
-    <p style="font-size:.74rem;color:#6b7280;margin-bottom:13px;line-height:1.5">Updated daily at 8am PST.</p>
-    <input type="email" placeholder="your@email.com" style="width:100%;padding:8px 12px;border-radius:8px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:#fff;font-family:'DM Sans',sans-serif;font-size:.78rem;outline:none;margin-bottom:7px"/>
-    <button onclick="subscribe()" style="width:100%;background:var(--pink);color:#fff;border:none;border-radius:8px;padding:8px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer">Subscribe Free &#8594;</button>
-  </div>
-</aside>
-</div>
-<footer>
-  <div class="fi">
-    <div class="ft">
-      <div class="fb">
-        <a href="#" class="logo"><div class="logo-sq"></div><span class="logo-txt">Daily Digest</span></a>
-        <p>Your news, beautifully illustrated. AI, markets, geopolitics &amp; fashion — refreshed every morning at 8am PST.</p>
-      </div>
-      <div><p class="fct">Sections</p><ul class="flinks"><li><a href="#">&#129302; AI &amp; Tech</a></li><li><a href="#">&#128200; Markets</a></li><li><a href="#">&#127758; Geopolitics</a></li><li><a href="#">&#10024; Fashion</a></li></ul></div>
-      <div><p class="fct">Company</p><ul class="flinks"><li><a href="#">About</a></li><li><a href="#">Newsletter</a></li><li><a href="#">Privacy</a></li><li><a href="#">Contact</a></li></ul></div>
-    </div>
-    <div class="fbot">
-      <p class="fcopy">&copy; 2026 <span>Daily Digest</span> &middot; Updated daily at 8am PST</p>
-      <div class="soc"><a class="socbtn" href="#">&#120143;</a><a class="socbtn" href="#">&#128248;</a><a class="socbtn" href="#">in</a><a class="socbtn" href="#">&#128225;</a></div>
-    </div>
-  </div>
-</footer>
-<div class="moverlay" id="mo" onclick="cmo(event)">
-  <div class="modal">
-    <button class="mcls" onclick="closeModal()">&#10005;</button>
-    <div class="mem">&#128236;</div>
-    <h2>Get the Daily Digest</h2>
-    <p>5 hand-picked stories every morning. Join 42,000+ readers.</p>
-    <input class="minp" type="email" placeholder="your@email.com"/>
-    <button class="mbtn" onclick="subscribe()">Subscribe for Free &#8594;</button>
-    <p style="font-size:.68rem;color:var(--tx3);margin-top:9px;text-align:center">No spam. Unsubscribe anytime.</p>
-  </div>
-</div>
-<div class="toast" id="toast"></div>
-<script>""" + js + """</script>
-</body>
-</html>"""
+    return (
+        "<!DOCTYPE html>\n<html lang=\"en\" data-theme=\"light\">\n<head>\n"
+        "  <meta charset=\"UTF-8\"/>\n"
+        "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"/>\n"
+        f"  <title>Daily Digest \u2013 {TODAY}</title>\n"
+        f"  <meta name=\"description\" content=\"Today's top stories in AI, Markets, Geopolitics and Fashion \u2014 updated every morning at 8am PST.\"/>\n"
+        f"  <meta property=\"og:title\" content=\"Daily Digest \u2013 {TODAY}\"/>\n"
+        "  <meta property=\"og:description\" content=\"Today's top stories in AI, Markets, Geopolitics and Fashion \u2014 beautifully illustrated.\"/>\n"
+        "  <meta property=\"og:image\" content=\"https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80\"/>\n"
+        "  <meta property=\"og:url\" content=\"https://alonhaliva.github.io/daily-digest/\"/>\n"
+        "  <meta property=\"og:type\" content=\"website\"/>\n"
+        "  <meta name=\"twitter:card\" content=\"summary_large_image\"/>\n"
+        "  <link href=\"https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&family=DM+Serif+Display:ital@0;1&display=swap\" rel=\"stylesheet\"/>\n"
+        "  <style>" + css + "</style>\n</head>\n<body>\n"
+        "<div id=\"prog\"></div>\n"
+        "<header><div class=\"hi\">"
+        "<a href=\"#\" class=\"logo\"><div class=\"logo-sq\"></div><span class=\"logo-txt\">Daily Digest</span></a>"
+        "<div class=\"hr\">"
+        "<span class=\"tagline\">Your news, beautifully illustrated</span>"
+        f"<span class=\"date-badge\">&#128197; {TODAY}</span>"
+        "<button class=\"btn-sub\" onclick=\"openModal()\">Subscribe Free</button>"
+        "<button class=\"btn-theme\" id=\"themeBtn\" onclick=\"toggleTheme()\">&#127769;</button>"
+        "</div></div></header>\n"
+        "<div class=\"ticker-wrap\">"
+        "<div class=\"ticker-label\">&#128293; Breaking</div>"
+        "<div class=\"ticker-outer\"><div class=\"ticker-track\">" + ticker + "</div></div>"
+        "</div>\n"
+        "<nav class=\"fbar\">"
+        "<span class=\"flbl\">Filter:</span>"
+        "<button class=\"pill on\" onclick=\"filter('all',this)\">&#128240; All News</button>"
+        "<button class=\"pill\" onclick=\"filter('tech',this)\">&#129302; AI &amp; Tech</button>"
+        "<button class=\"pill\" onclick=\"filter('mkt',this)\">&#128200; Markets</button>"
+        "<button class=\"pill\" onclick=\"filter('geo',this)\">&#127758; Geopolitics</button>"
+        "<button class=\"pill\" onclick=\"filter('fash',this)\">&#10024; Fashion</button>"
+        "</nav>\n"
+        "<div class=\"wrap\"><div class=\"feed\">\n"
+        "  <section class=\"nsec vis\" data-cat=\"tech\">"
+        "<div class=\"sh\"><div class=\"si tech\">&#129302;</div><h2 class=\"stitle\">AI &amp; Tech</h2></div>"
+        "<div class=\"cgrid\">" + t_hero + "<div class=\"crow\">" + t_s1 + t_s2 + "</div></div></section>\n"
+        "  <div class=\"divider\"></div>\n"
+        "  <div class=\"nlsec vis nlband\">"
+        "<p class=\"nley\">&#128236; Free Daily Newsletter</p>"
+        "<h2 class=\"nlt\">Stay ahead of the story</h2>"
+        "<p class=\"nls\">Top 5 stories every morning at 8am PST. No noise &mdash; just what matters.</p>"
+        "<div class=\"nlf\"><input class=\"nli\" type=\"email\" placeholder=\"your@email.com\"/>"
+        "<button class=\"nlb\" onclick=\"subscribe()\">Subscribe &#8594;</button></div>"
+        "<p class=\"nlnote\">Join 42,000+ readers &middot; Unsubscribe anytime</p></div>\n"
+        "  <section class=\"nsec vis\" data-cat=\"mkt\">"
+        "<div class=\"sh\"><div class=\"si mkt\">&#128200;</div><h2 class=\"stitle\">Markets</h2></div>"
+        "<div class=\"cgrid\">" + m_hero + "<div class=\"crow\">" + m_s1 + m_s2 + "</div></div></section>\n"
+        "  <div class=\"divider\"></div>\n"
+        "  <section class=\"nsec vis\" data-cat=\"geo\">"
+        "<div class=\"sh\"><div class=\"si geo\">&#127758;</div><h2 class=\"stitle\">Geopolitics</h2></div>"
+        "<div class=\"cgrid\">" + g_hero + "<div class=\"crow\">" + g_s1 + g_s2 + "</div></div></section>\n"
+        "  <div class=\"divider\"></div>\n"
+        "  <section class=\"nsec vis\" data-cat=\"fash\">"
+        "<div class=\"sh\"><div class=\"si fash\">&#10024;</div><h2 class=\"stitle\">Fashion</h2></div>"
+        "<div class=\"cgrid\">" + f_hero + "<div class=\"crow\">" + f_s1 + f_s2 + "</div></div></section>\n"
+        "</div>\n"
+        "<aside class=\"sidebar\">"
+        "<div class=\"scard\"><h3 class=\"sc-title\">&#128202; Markets Snapshot</h3><div>"
+        "<div class=\"mkt-row\"><div><div class=\"mn\">S&amp;P 500</div><div class=\"mt\">SPX</div></div><div><div class=\"mv\">5,282</div><div class=\"mc dn\">&#9660; &minus;2.1%</div></div></div>"
+        "<div class=\"mkt-row\"><div><div class=\"mn\">NASDAQ</div><div class=\"mt\">COMP</div></div><div><div class=\"mv\">16,104</div><div class=\"mc dn\">&#9660; &minus;2.6%</div></div></div>"
+        "<div class=\"mkt-row\"><div><div class=\"mn\">Bitcoin</div><div class=\"mt\">BTC</div></div><div><div class=\"mv\">$84,200</div><div class=\"mc up\">&#9650; +0.9%</div></div></div>"
+        "<div class=\"mkt-row\"><div><div class=\"mn\">Gold</div><div class=\"mt\">XAU</div></div><div><div class=\"mv\">$3,341</div><div class=\"mc up\">&#9650; +2.3%</div></div></div>"
+        "<div class=\"mkt-row\"><div><div class=\"mn\">Oil (WTI)</div><div class=\"mt\">crude</div></div><div><div class=\"mv\">$65.40</div><div class=\"mc up\">&#9650; +4.1%</div></div></div>"
+        "</div></div>"
+        "<div class=\"scard\"><h3 class=\"sc-title\">&#128293; Most Read Today</h3><ul class=\"tlist\">" + trending + "</ul></div>"
+        "<div class=\"scard\" style=\"background:linear-gradient(135deg,#0d1117,#1e1060);border-color:transparent\">"
+        "<p style=\"font-size:.63rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--pink);margin-bottom:5px\">&#128236; Newsletter</p>"
+        "<p style=\"font-family:'DM Serif Display',serif;font-size:1rem;color:#fff;margin-bottom:5px\">5 stories. Every morning.</p>"
+        "<p style=\"font-size:.74rem;color:#6b7280;margin-bottom:13px;line-height:1.5\">Updated daily at 8am PST.</p>"
+        "<input type=\"email\" placeholder=\"your@email.com\" style=\"width:100%;padding:8px 12px;border-radius:8px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:#fff;font-family:'DM Sans',sans-serif;font-size:.78rem;outline:none;margin-bottom:7px\"/>"
+        "<button onclick=\"subscribe()\" style=\"width:100%;background:var(--pink);color:#fff;border:none;border-radius:8px;padding:8px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer\">Subscribe Free &#8594;</button>"
+        "</div></aside></div>\n"
+        "<footer><div class=\"fi\">"
+        "<div class=\"ft\">"
+        "<div class=\"fb\"><a href=\"#\" class=\"logo\"><div class=\"logo-sq\"></div><span class=\"logo-txt\">Daily Digest</span></a>"
+        "<p>Your news, beautifully illustrated. AI, markets, geopolitics &amp; fashion &mdash; refreshed every morning at 8am PST.</p></div>"
+        "<div><p class=\"fct\">Sections</p><ul class=\"flinks\">"
+        "<li><a href=\"#\">&#129302; AI &amp; Tech</a></li><li><a href=\"#\">&#128200; Markets</a></li>"
+        "<li><a href=\"#\">&#127758; Geopolitics</a></li><li><a href=\"#\">&#10024; Fashion</a></li></ul></div>"
+        "<div><p class=\"fct\">Company</p><ul class=\"flinks\">"
+        "<li><a href=\"#\">About</a></li><li><a href=\"#\">Newsletter</a></li>"
+        "<li><a href=\"#\">Privacy</a></li><li><a href=\"#\">Contact</a></li></ul></div>"
+        "</div>"
+        "<div class=\"fbot\">"
+        f"<p class=\"fcopy\">&copy; 2026 <span>Daily Digest</span> &middot; Updated daily at 8am PST</p>"
+        "<div class=\"soc\"><a class=\"socbtn\" href=\"#\">&#120143;</a><a class=\"socbtn\" href=\"#\">&#128248;</a>"
+        "<a class=\"socbtn\" href=\"#\">in</a><a class=\"socbtn\" href=\"#\">&#128225;</a></div>"
+        "</div></div></footer>\n"
+        "<div class=\"moverlay\" id=\"mo\" onclick=\"cmo(event)\">"
+        "<div class=\"modal\">"
+        "<button class=\"mcls\" onclick=\"closeModal()\">&#10005;</button>"
+        "<div class=\"mem\">&#128236;</div>"
+        "<h2>Get the Daily Digest</h2>"
+        "<p>5 hand-picked stories every morning. Join 42,000+ readers.</p>"
+        "<input class=\"minp\" type=\"email\" placeholder=\"your@email.com\"/>"
+        "<button class=\"mbtn\" onclick=\"subscribe()\">Subscribe for Free &#8594;</button>"
+        "<p style=\"font-size:.68rem;color:var(--tx3);margin-top:9px;text-align:center\">No spam. Unsubscribe anytime.</p>"
+        "</div></div>\n"
+        "<div class=\"toast\" id=\"toast\"></div>\n"
+        "<script>" + js + "</script>\n"
+        "</body>\n</html>"
+    )
 
 
 if __name__ == "__main__":
