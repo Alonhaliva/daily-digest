@@ -1,52 +1,137 @@
 #!/usr/bin/env python3
-import os, json, urllib.request, urllib.parse
+"""
+Daily Digest — auto news updater
+Runs every day at 8am PST via GitHub Actions.
+Fixes: ticker overlap, shuffled images, daily fresh articles.
+"""
+import os, json, random, urllib.request, urllib.parse
 from datetime import datetime, timezone, timedelta
 
 API_KEY = os.environ.get("NEWS_API_KEY", "")
 PST     = timezone(timedelta(hours=-8))
 TODAY   = datetime.now(PST).strftime("%B %d, %Y")
+SEED    = int(datetime.now(PST).strftime("%Y%m%d"))  # changes daily → new image order each day
+random.seed(SEED)
 
-IMAGES = {
-    "tech":    ["https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&q=80","https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=800&q=80","https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=800&q=80"],
-    "stocks":  ["https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80","https://images.unsplash.com/photo-1559526324-593bc073d938?w=800&q=80","https://images.unsplash.com/photo-1640340434855-6084b1f4901c?w=800&q=80"],
-    "geo":     ["https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?w=800&q=80","https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=800&q=80","https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=800&q=80"],
-    "fashion": ["https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=800&q=80","https://images.unsplash.com/photo-1445205170230-053b83016050?w=800&q=80","https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80"],
-}
-SMALL_IMAGES = {
-    "tech":    ["https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&q=80","https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=600&q=80"],
-    "stocks":  ["https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=600&q=80","https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&q=80"],
-    "geo":     ["https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=600&q=80","https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&q=80"],
-    "fashion": ["https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&q=80","https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=600&q=80"],
-}
-QUERIES = {
-    "tech":    {"q":"artificial intelligence OR technology","language":"en","sortBy":"publishedAt","pageSize":"3"},
-    "stocks":  {"q":"stock market OR economy OR finance","language":"en","sortBy":"publishedAt","pageSize":"3"},
-    "geo":     {"q":"geopolitics OR world news OR war","language":"en","sortBy":"publishedAt","pageSize":"3"},
-    "fashion": {"q":"fashion OR style OR luxury","language":"en","sortBy":"publishedAt","pageSize":"3"},
-}
-FALLBACK = {
+# ── IMAGE POOLS — shuffled daily so images rotate ──────────────────────────
+ALL_IMAGES = {
     "tech": [
-        {"title":"AI race intensifies as major labs release competing models","description":"OpenAI, Google, and Anthropic are locked in fierce competition to define the next generation of AI.","url":"#","source":{"name":"TechCrunch"},"read_time":"4 min read"},
-        {"title":"Big Tech doubles down on nuclear energy for AI data centers","description":"Microsoft, Google, and Amazon are signing long-term nuclear deals to power AI infrastructure.","url":"#","source":{"name":"Wired"},"read_time":"3 min read"},
-        {"title":"Open-source AI models close gap with proprietary frontier systems","description":"Community-built models are now competitive on benchmarks previously dominated by closed labs.","url":"#","source":{"name":"The Verge"},"read_time":"3 min read"},
+        "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&q=80",
+        "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=800&q=80",
+        "https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=800&q=80",
+        "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&q=80",
+        "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80",
+        "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80",
+        "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=800&q=80",
+        "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=800&q=80",
     ],
     "stocks": [
-        {"title":"Markets volatile as tariff uncertainty rattles Wall Street","description":"Investors are watching Fed policy and trade developments as earnings season gets underway.","url":"#","source":{"name":"Bloomberg"},"read_time":"5 min read"},
-        {"title":"Gold hits record high as investors seek safe haven assets","description":"The precious metal surged past $3,200 as global uncertainty drove demand for defensive positions.","url":"#","source":{"name":"Reuters"},"read_time":"3 min read"},
-        {"title":"Tech stocks rebound as AI spending projections hold strong","description":"Analysts maintain bullish outlook on semiconductor and cloud infrastructure names into Q2.","url":"#","source":{"name":"WSJ"},"read_time":"4 min read"},
+        "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80",
+        "https://images.unsplash.com/photo-1559526324-593bc073d938?w=800&q=80",
+        "https://images.unsplash.com/photo-1640340434855-6084b1f4901c?w=800&q=80",
+        "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80",
+        "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=800&q=80",
+        "https://images.unsplash.com/photo-1579621970795-87facc2f976d?w=800&q=80",
+        "https://images.unsplash.com/photo-1535320903710-d993d3d77d29?w=800&q=80",
+        "https://images.unsplash.com/photo-1631897642057-8f1e9bed28e6?w=800&q=80",
     ],
     "geo": [
-        {"title":"G7 nations coordinate response to escalating trade tensions","description":"Foreign ministers met in emergency session to align strategy on economic coercion.","url":"#","source":{"name":"The Guardian"},"read_time":"5 min read"},
-        {"title":"UN Security Council calls emergency session on Middle East situation","description":"Diplomats gathered as regional tensions continue to mount following a series of exchanges.","url":"#","source":{"name":"BBC News"},"read_time":"3 min read"},
-        {"title":"European elections reshape political landscape across the continent","description":"Centrist parties face pressure from both left and right as voters signal frustration.","url":"#","source":{"name":"FT"},"read_time":"4 min read"},
+        "https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?w=800&q=80",
+        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=800&q=80",
+        "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=800&q=80",
+        "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=800&q=80",
+        "https://images.unsplash.com/photo-1522661067900-ab829854a57f?w=800&q=80",
+        "https://images.unsplash.com/photo-1495020689067-958852a7765e?w=800&q=80",
+        "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80",
+        "https://images.unsplash.com/photo-1568515045052-f9a854d70bfd?w=800&q=80",
     ],
     "fashion": [
-        {"title":"Quiet luxury dominates runways as maximalism fades","description":"Designers across Paris, Milan, and New York embraced understated elegance this season.","url":"#","source":{"name":"Vogue"},"read_time":"4 min read"},
-        {"title":"Gen Z reshapes luxury through circular fashion platforms","description":"Resale, rental, and repair are now mainstream as younger consumers redefine fashion ownership.","url":"#","source":{"name":"Harper's Bazaar"},"read_time":"3 min read"},
-        {"title":"Luxury goods outperform traditional investments for third year","description":"Rare handbags, vintage watches, and limited sneakers deliver double-digit annual returns.","url":"#","source":{"name":"FT"},"read_time":"3 min read"},
+        "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=800&q=80",
+        "https://images.unsplash.com/photo-1445205170230-053b83016050?w=800&q=80",
+        "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80",
+        "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&q=80",
+        "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&q=80",
+        "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80",
+        "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&q=80",
+        "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=800&q=80",
     ],
 }
-READ_TIMES = ["2 min read","3 min read","4 min read","5 min read","6 min read"]
+
+def get_images(cat):
+    """Return a fresh shuffled list of 3 images for the day."""
+    pool = ALL_IMAGES[cat][:]
+    random.shuffle(pool)
+    return pool[:3]
+
+# ── NEWS API QUERIES ───────────────────────────────────────────────────────
+QUERIES = {
+    "tech":    {"q": "artificial intelligence OR technology OR AI", "language": "en", "sortBy": "publishedAt", "pageSize": "4"},
+    "stocks":  {"q": "stock market OR economy OR finance OR tariffs", "language": "en", "sortBy": "publishedAt", "pageSize": "4"},
+    "geo":     {"q": "geopolitics OR war OR diplomacy OR world news", "language": "en", "sortBy": "publishedAt", "pageSize": "4"},
+    "fashion": {"q": "fashion OR style OR luxury OR clothing", "language": "en", "sortBy": "publishedAt", "pageSize": "4"},
+}
+
+# ── TODAY'S REAL FALLBACK ARTICLES (updated April 20 2026) ─────────────────
+FALLBACK = {
+    "tech": [
+        {"title": "Meta's Muse Spark arrives — ending the company's open-source era",
+         "description": "Meta's first proprietary AI model since its $14.3B Scale AI deal is rolling out across Facebook, Instagram, WhatsApp and Ray-Ban glasses, with a deep-reasoning 'Contemplating' mode to rival OpenAI.",
+         "url": "https://www.cnbc.com/2026/04/08/meta-debuts-first-major-ai-model-since-14-billion-deal-to-bring-in-alexandr-wang.html",
+         "source": {"name": "CNBC"}, "read_time": "5 min read"},
+        {"title": "Big Tech races to lock in nuclear power deals for AI data centers",
+         "description": "Microsoft, Google and Amazon are signing long-term nuclear energy contracts as AI infrastructure demand outpaces grid capacity, turning power generation into a strategic technology layer.",
+         "url": "https://techstartups.com/2026/04/10/top-tech-news-today-april-10-2026/",
+         "source": {"name": "TechStartups"}, "read_time": "3 min read"},
+        {"title": "Gucci and Google announce luxury AI smart glasses for 2027",
+         "description": "Kering CEO confirmed the Gucci-branded device will combine the house's iconic aesthetics with Google's AI capabilities, intensifying competition with Meta's Ray-Ban line.",
+         "url": "https://logos-pres.md/en/news/fashion-meets-technology-gucci-and-google-create-glasses-of-the-future/",
+         "source": {"name": "Logos Press"}, "read_time": "3 min read"},
+    ],
+    "stocks": [
+        {"title": "Markets tumble as Iran shuts Strait of Hormuz — oil surges 4%",
+         "description": "Wall Street fell sharply after Iran closed the vital shipping lane following a US Navy seizure of an Iranian cargo ship. Oil prices surged while gold hit fresh highs as investors sought safe havens.",
+         "url": "https://www.usbank.com/investing/financial-perspectives/market-news/stock-market-under-trump.html",
+         "source": {"name": "US Bank / Bloomberg"}, "read_time": "5 min read"},
+        {"title": "Trump ceasefire with Iran expires Wednesday — markets brace for volatility",
+         "description": "President Trump said it is 'highly unlikely' he will extend the ceasefire past Wednesday evening, raising the prospect of renewed conflict and sustained energy price pressure.",
+         "url": "https://www.cnn.com/2026/04/20/world/live-news/iran-war-us-trump-israel",
+         "source": {"name": "CNN"}, "read_time": "4 min read"},
+        {"title": "OpenAI targets $1 trillion IPO — retail investors will get a slice",
+         "description": "CFO Sarah Friar confirmed OpenAI is laying groundwork for a US listing after individual investors committed more than $3B in its latest funding round.",
+         "url": "https://techstartups.com/2026/04/09/top-tech-news-today-april-9-2026/",
+         "source": {"name": "Reuters / CNBC"}, "read_time": "3 min read"},
+    ],
+    "geo": [
+        {"title": "Iran shuts Strait of Hormuz again after US seizes Iranian cargo ship",
+         "description": "Tehran closed the vital waterway one day after reopening it, following a US Navy interception in the Sea of Oman. Trump insists a deal is 'very close' — Iran's Foreign Ministry says there are no active talks.",
+         "url": "https://www.democracynow.org/2026/4/20/headlines",
+         "source": {"name": "Democracy Now / CNN"}, "read_time": "5 min read"},
+        {"title": "Magnitude 7.7 earthquake strikes northern Japan — tsunami warning issued then lifted",
+         "description": "A powerful quake off Iwate prefecture shook buildings as far away as Tokyo. Authorities initially warned of waves up to 3 metres before downgrading the alert as actual wave heights stayed below 1 metre.",
+         "url": "https://www.aljazeera.com/news/2026/4/20/powerful-7-4-earthquake-strikes-northern-japan-tsunami-warning-issued",
+         "source": {"name": "Al Jazeera"}, "read_time": "3 min read"},
+        {"title": "Orbán concedes as Hungary's opposition heads for historic supermajority",
+         "description": "Opposition leader Péter Magyar surged to a landslide result, signalling a major political realignment in one of the EU's most watched democracies.",
+         "url": "https://www.foxnews.com/world/viktor-orban-concedes-defeat-opposition-leader-heads-potential-supermajority-win",
+         "source": {"name": "Fox News"}, "read_time": "4 min read"},
+    ],
+    "fashion": [
+        {"title": "AI is finally cracking fashion's biggest problem — the dreaded return",
+         "description": "A new wave of AI startups including Catches and Zara's virtual try-on tool are using physics-based digital twins to let shoppers see exactly how clothes will fit, targeting a 20–30x ROI for luxury brands.",
+         "url": "https://www.cnbc.com/2026/04/05/ai-retail-start-ups-virtual-try-on-tech-margins.html",
+         "source": {"name": "CNBC"}, "read_time": "4 min read"},
+        {"title": "LVMH, Kering and Richemont re-examine brand portfolios as luxury faces margin squeeze",
+         "description": "The three luxury conglomerates are restructuring store networks and reassessing underperforming labels as rising tariffs, volatile demand, and AI disruption reshape the industry.",
+         "url": "https://www.businessoffashion.com/articles/technology/the-state-of-fashion-2026-report-ai-automation-workforce-organisation-talent/",
+         "source": {"name": "Business of Fashion"}, "read_time": "5 min read"},
+        {"title": "Quiet luxury holds firm as maximalism fades from the runway",
+         "description": "Milan and Paris confirmed precision tailoring, neutral palettes and understated silhouettes as the decade's defining aesthetic — while Gen Z continues to reshape luxury through resale and rental platforms.",
+         "url": "#",
+         "source": {"name": "Vogue"}, "read_time": "3 min read"},
+    ],
+}
+
+READ_TIMES = ["2 min read", "3 min read", "4 min read", "5 min read", "6 min read"]
 
 def fetch_articles(cat, params):
     if not API_KEY:
@@ -54,55 +139,93 @@ def fetch_articles(cat, params):
     try:
         params["apiKey"] = API_KEY
         url = "https://newsapi.org/v2/everything?" + urllib.parse.urlencode(params)
-        req = urllib.request.Request(url, headers={"User-Agent":"DailyDigest/1.0"})
+        req = urllib.request.Request(url, headers={"User-Agent": "DailyDigest/1.0"})
         with urllib.request.urlopen(req, timeout=10) as r:
             data = json.loads(r.read())
-        articles = [a for a in data.get("articles",[]) if a.get("title") and a.get("description") and "[Removed]" not in a.get("title","")]
+        articles = [
+            a for a in data.get("articles", [])
+            if a.get("title") and a.get("description")
+            and "[Removed]" not in a.get("title", "")
+            and len(a.get("description", "")) > 40
+        ]
         result = []
         for i, a in enumerate(articles[:3]):
-            result.append({"title":a["title"].split(" - ")[0][:120],"description":a["description"][:220],"url":a.get("url","#"),"source":a.get("source",{"name":"News"}),"read_time":READ_TIMES[i % len(READ_TIMES)]})
+            result.append({
+                "title":      a["title"].split(" - ")[0][:120],
+                "description": (a.get("description") or "")[:220],
+                "url":        a.get("url", "#"),
+                "source":     a.get("source", {"name": "News"}),
+                "read_time":  READ_TIMES[i % len(READ_TIMES)],
+            })
         return result if len(result) >= 2 else FALLBACK[cat]
     except Exception as e:
-        print(f"API error for {cat}: {e}")
+        print(f"  API error ({cat}): {e} — using fallback")
         return FALLBACK[cat]
 
-def card_hero(art, img, badge_cls, badge_txt):
-    src = art.get("source",{}).get("name","News")
-    rt  = art.get("read_time","4 min read")
-    url = art.get("url","#")
+# ── HTML CARD BUILDERS ─────────────────────────────────────────────────────
+def card_hero(art, img, bdg_cls, bdg_txt):
+    src = art.get("source", {}).get("name", "News")
+    rt  = art.get("read_time", "4 min read")
+    url = art.get("url", "#")
     tgt = 'target="_blank" rel="noopener"' if url != "#" else ""
-    return f"""<article class="card-hero fi-card"><div class="iw"><img src="{img}" alt="{badge_txt}" loading="lazy"/><span class="bdg {badge_cls}">{badge_txt}</span></div><div class="cb"><div><div class="cmeta"><span class="src">{src}</span><span class="rt">⏱ {rt}</span></div><h3 class="ctitle">{art['title']}</h3><p class="cex">{art['description']}</p></div><div class="cfoot"><a href="{url}" class="rl" {tgt}>Read Article →</a><button class="sbtn" onclick="save(this)">🔖</button></div></div></article>"""
+    title = art["title"].replace('"', "&quot;").replace("'", "&#39;")
+    desc  = art["description"].replace('"', "&quot;").replace("'", "&#39;")
+    return f"""<article class="card-hero fi-card">
+        <div class="iw"><img src="{img}" alt="{bdg_txt}" loading="lazy"/><span class="bdg {bdg_cls}">{bdg_txt}</span></div>
+        <div class="cb"><div>
+          <div class="cmeta"><span class="src">{src}</span><span class="rt">⏱ {rt}</span></div>
+          <h3 class="ctitle">{title}</h3>
+          <p class="cex">{desc}</p>
+        </div>
+        <div class="cfoot"><a href="{url}" class="rl" {tgt}>Read Article →</a><button class="sbtn" onclick="save(this)">🔖</button></div>
+        </div></article>"""
 
-def card_small(art, img, badge_cls, badge_txt):
-    src = art.get("source",{}).get("name","News")
-    rt  = art.get("read_time","3 min read")
-    url = art.get("url","#")
+def card_small(art, img, bdg_cls, bdg_txt):
+    src = art.get("source", {}).get("name", "News")
+    rt  = art.get("read_time", "3 min read")
+    url = art.get("url", "#")
     tgt = 'target="_blank" rel="noopener"' if url != "#" else ""
-    return f"""<article class="cs fi-card"><div class="iw"><img src="{img}" alt="{badge_txt}" loading="lazy"/><span class="bdg {badge_cls}">{badge_txt}</span></div><div class="cb"><div class="cmeta"><span class="src">{src}</span><span class="rt">⏱ {rt}</span></div><h3 class="ctitle">{art['title']}</h3><p class="cex">{art['description'][:160]}</p><div class="cfoot"><a href="{url}" class="rl" {tgt}>Read →</a><button class="sbtn" onclick="save(this)">🔖</button></div></div></article>"""
+    title = art["title"].replace('"', "&quot;").replace("'", "&#39;")
+    desc  = (art["description"][:160]).replace('"', "&quot;").replace("'", "&#39;")
+    return f"""<article class="cs fi-card">
+        <div class="iw"><img src="{img}" alt="{bdg_txt}" loading="lazy"/><span class="bdg {bdg_cls}">{bdg_txt}</span></div>
+        <div class="cb">
+          <div class="cmeta"><span class="src">{src}</span><span class="rt">⏱ {rt}</span></div>
+          <h3 class="ctitle">{title}</h3>
+          <p class="cex">{desc}</p>
+          <div class="cfoot"><a href="{url}" class="rl" {tgt}>Read →</a><button class="sbtn" onclick="save(this)">🔖</button></div>
+        </div></article>"""
 
-def ticker_items(all_articles):
-    emojis = {"tech":"🤖","stocks":"📈","geo":"🌍","fashion":"✨"}
+def make_ticker(all_articles):
+    emojis = {"tech": "🤖", "stocks": "📈", "geo": "🌍", "fashion": "✨"}
     items = ""
     for cat, arts in all_articles.items():
         for a in arts[:2]:
             t = a["title"][:80]
-            items += f'<span class="ticker-item"><em>{emojis[cat]}</em>{t}</span>\n    '
-    return items + items
+            items += f'<span class="ticker-item"><em>{emojis[cat]}</em>{t}</span>'
+    return items + items  # duplicate for seamless loop
 
-def trending_html(all_articles):
-    labels = {"tech":"AI & Tech","stocks":"Markets","geo":"Geopolitics","fashion":"Fashion"}
+def make_trending(all_articles):
+    labels = {"tech": "AI & Tech", "stocks": "Markets", "geo": "Geopolitics", "fashion": "Fashion"}
     html = ""
     n = 1
     for cat, arts in all_articles.items():
         for a in arts[:2]:
-            html += f'<li class="ti"><span class="tnum">0{n}</span><div><div class="tcat">{labels[cat]}</div><div class="th">{a["title"][:70]}</div></div></li>'
+            t = a["title"][:68]
+            html += f'<li class="ti"><span class="tnum">0{n}</span><div><div class="tcat">{labels[cat]}</div><div class="th">{t}</div></div></li>'
             n += 1
-            if n > 5: break
-        if n > 5: break
+            if n > 5:
+                break
+        if n > 5:
+            break
     return html
 
+# ── FULL HTML ──────────────────────────────────────────────────────────────
 def build_html(all_articles):
-    tech=all_articles["tech"]; stocks=all_articles["stocks"]; geo=all_articles["geo"]; fashion=all_articles["fashion"]
+    imgs = {cat: get_images(cat) for cat in all_articles}
+    tech=all_articles["tech"]; stocks=all_articles["stocks"]
+    geo=all_articles["geo"];   fashion=all_articles["fashion"]
+
     return f"""<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
@@ -111,7 +234,7 @@ def build_html(all_articles):
   <title>Daily Digest – {TODAY}</title>
   <meta name="description" content="Today's top stories in AI, Markets, Geopolitics and Fashion — updated every morning at 8am PST."/>
   <meta property="og:title" content="Daily Digest – {TODAY}"/>
-  <meta property="og:description" content="Today's top stories in AI, Markets, Geopolitics and Fashion."/>
+  <meta property="og:description" content="Today's top stories in AI, Markets, Geopolitics and Fashion — beautifully illustrated."/>
   <meta property="og:image" content="https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80"/>
   <meta property="og:url" content="https://alonhaliva.github.io/daily-digest/"/>
   <meta property="og:type" content="website"/>
@@ -124,14 +247,8 @@ def build_html(all_articles):
     html{{scroll-behavior:smooth}}
     body{{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;transition:background .3s,color .3s}}
     #prog{{position:fixed;top:0;left:0;height:3px;background:linear-gradient(to right,var(--pink),var(--violet));width:0%;z-index:9999;pointer-events:none}}
-    .ticker-wrap{{background:var(--navy);height:34px;display:flex;align-items:center;overflow:hidden}}
-    [data-theme=dark] .ticker-wrap{{background:#0d0f17;border-bottom:1px solid var(--bdr)}}
-    .ticker-label{{background:var(--pink);color:#fff;font-size:.66rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;padding:0 13px;height:100%;display:flex;align-items:center;white-space:nowrap;flex-shrink:0}}
-    .ticker-track{{display:flex;animation:tick 55s linear infinite;white-space:nowrap}}
-    .ticker-track:hover{{animation-play-state:paused}}
-    .ticker-item{{color:#d1d5db;font-size:.73rem;padding:0 30px}}
-    .ticker-item em{{color:var(--pink);font-style:normal;margin-right:6px}}
-    @keyframes tick{{0%{{transform:translateX(0)}}100%{{transform:translateX(-50%)}}}}
+
+    /* ── HEADER ── */
     header{{background:var(--navy);padding:16px 24px;position:sticky;top:0;z-index:200;box-shadow:0 2px 20px rgba(0,0,0,.45)}}
     .hi{{max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:14px}}
     .logo{{display:inline-flex;align-items:center;gap:10px;text-decoration:none}}
@@ -140,13 +257,33 @@ def build_html(all_articles):
     .hr{{display:flex;align-items:center;gap:9px}}
     .tagline{{color:#9ca3af;font-size:.74rem;letter-spacing:.04em}}
     @media(max-width:580px){{.tagline{{display:none}}}}
+    .date-badge{{background:rgba(255,255,255,.1);color:#9ca3af;font-size:.7rem;padding:4px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);white-space:nowrap}}
+    @media(max-width:640px){{.date-badge{{display:none}}}}
     .btn-sub{{background:var(--pink);color:#fff;border:none;border-radius:999px;padding:7px 16px;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;transition:opacity .18s,transform .18s}}
     .btn-sub:hover{{opacity:.88;transform:translateY(-1px)}}
     @media(max-width:400px){{.btn-sub{{display:none}}}}
     .btn-theme{{background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.14);border-radius:50%;color:#fff;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.95rem;transition:background .2s,transform .25s;flex-shrink:0}}
     .btn-theme:hover{{background:rgba(255,255,255,.16);transform:rotate(22deg)}}
-    .date-badge{{background:rgba(255,255,255,.1);color:#9ca3af;font-size:.7rem;padding:4px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);white-space:nowrap}}
-    @media(max-width:640px){{.date-badge{{display:none}}}}
+
+    /* ── TICKER FIX — label is inline, no absolute positioning ── */
+    .ticker-wrap{{background:var(--navy);height:36px;display:flex;align-items:center;overflow:hidden;width:100%}}
+    [data-theme=dark] .ticker-wrap{{background:#0d0f17;border-bottom:1px solid var(--bdr)}}
+    .ticker-label{{
+      background:var(--pink);color:#fff;
+      font-size:.65rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;
+      padding:0 12px;
+      height:36px;line-height:36px;
+      white-space:nowrap;flex-shrink:0;
+      /* sits inline — no overlap */
+    }}
+    .ticker-outer{{flex:1;overflow:hidden;height:36px;display:flex;align-items:center}}
+    .ticker-track{{display:flex;animation:tick 60s linear infinite;white-space:nowrap;align-items:center}}
+    .ticker-track:hover{{animation-play-state:paused}}
+    .ticker-item{{color:#d1d5db;font-size:.72rem;padding:0 28px;line-height:36px}}
+    .ticker-item em{{color:var(--pink);font-style:normal;margin-right:6px}}
+    @keyframes tick{{0%{{transform:translateX(0)}}100%{{transform:translateX(-50%)}}}}
+
+    /* ── FILTER ── */
     .fbar{{background:var(--sur);border-bottom:1px solid var(--bdr);padding:10px 24px;display:flex;align-items:center;gap:8px;overflow-x:auto;scrollbar-width:none;transition:background .3s}}
     .fbar::-webkit-scrollbar{{display:none}}
     .flbl{{font-weight:600;font-size:.77rem;color:var(--tx2);white-space:nowrap;margin-right:3px}}
@@ -154,6 +291,8 @@ def build_html(all_articles):
     .pill:hover{{border-color:var(--violet);color:var(--violet);transform:translateY(-1px)}}
     .pill.on{{background:var(--navy);border-color:var(--navy);color:#fff}}
     [data-theme=dark] .pill.on{{background:var(--pink);border-color:var(--pink)}}
+
+    /* ── LAYOUT ── */
     .wrap{{max-width:1280px;margin:0 auto;padding:30px 24px 80px;display:grid;grid-template-columns:1fr 296px;gap:34px;align-items:start}}
     @media(max-width:1024px){{.wrap{{grid-template-columns:1fr}}.sidebar{{display:none}}}}
     .sh{{display:flex;align-items:center;gap:11px;margin-bottom:16px}}
@@ -163,6 +302,8 @@ def build_html(all_articles):
     .cgrid{{display:grid;gap:17px;margin-bottom:44px}}
     .crow{{display:grid;grid-template-columns:1fr 1fr;gap:17px}}
     @media(max-width:540px){{.crow{{grid-template-columns:1fr}}}}
+
+    /* ── CARDS ── */
     .card-hero{{display:grid;grid-template-columns:1fr 1fr;background:var(--sur);border-radius:18px;overflow:hidden;box-shadow:var(--sh);transition:transform .22s,box-shadow .22s;border:1px solid var(--bdr)}}
     .card-hero:hover{{transform:translateY(-4px);box-shadow:var(--sh2)}}
     @media(max-width:600px){{.card-hero{{grid-template-columns:1fr}}}}
@@ -195,6 +336,8 @@ def build_html(all_articles):
     .cs{{background:var(--sur);border-radius:18px;overflow:hidden;box-shadow:var(--sh);display:flex;flex-direction:column;transition:transform .22s,box-shadow .22s;border:1px solid var(--bdr)}}
     .cs:hover{{transform:translateY(-4px);box-shadow:var(--sh2)}}
     .divider{{height:1px;background:linear-gradient(to right,transparent,var(--bdr),transparent);margin:0 0 38px}}
+
+    /* ── NEWSLETTER ── */
     .nlband{{background:linear-gradient(135deg,#0d1117,#1e1060);border-radius:20px;padding:36px 32px;text-align:center;margin-bottom:44px;position:relative;overflow:hidden}}
     .nlband::before{{content:'';position:absolute;top:-48px;right:-48px;width:160px;height:160px;background:var(--pink);border-radius:50%;opacity:.12}}
     .nlband::after{{content:'';position:absolute;bottom:-32px;left:-32px;width:120px;height:120px;background:var(--violet);border-radius:50%;opacity:.16}}
@@ -207,6 +350,8 @@ def build_html(all_articles):
     .nli::placeholder{{color:#6b7280}}
     .nlb{{background:var(--pink);color:#fff;border:none;border-radius:999px;padding:10px 20px;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:700;cursor:pointer;position:relative;z-index:1}}
     .nlnote{{color:#4b5568;font-size:.68rem;margin-top:9px;position:relative;z-index:1}}
+
+    /* ── SIDEBAR ── */
     .sidebar{{position:sticky;top:70px;display:flex;flex-direction:column;gap:18px}}
     .scard{{background:var(--sur);border-radius:16px;padding:18px;box-shadow:var(--sh);border:1px solid var(--bdr)}}
     .sc-title{{font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:.06em;color:var(--tx);margin-bottom:12px}}
@@ -220,8 +365,11 @@ def build_html(all_articles):
     .tnum{{font-family:'Bebas Neue',sans-serif;font-size:1.28rem;color:var(--bdr);line-height:1;flex-shrink:0;width:20px;transition:color .18s}}
     .ti:hover .tnum{{color:var(--pink)}}
     .tcat{{font-size:.6rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--violet);margin-bottom:2px}}
+    [data-theme=dark] .tcat{{color:var(--vl)}}
     .th{{font-size:.77rem;font-weight:600;color:var(--tx);line-height:1.35;transition:color .18s}}
     .ti:hover .th{{color:var(--pink)}}
+
+    /* ── FOOTER ── */
     footer{{background:var(--navy);padding:34px 24px 22px}}
     .fi{{max-width:1280px;margin:0 auto}}
     .ft{{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:26px;margin-bottom:26px;padding-bottom:26px;border-bottom:1px solid #1f2937}}
@@ -235,6 +383,8 @@ def build_html(all_articles):
     .soc{{display:flex;gap:7px}}
     .socbtn{{width:30px;height:30px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid #1f2937;display:flex;align-items:center;justify-content:center;color:#6b7280;font-size:.78rem;text-decoration:none;transition:all .18s}}
     .socbtn:hover{{background:var(--pink);color:#fff;border-color:var(--pink);transform:translateY(-2px)}}
+
+    /* ── TOAST / MODAL ── */
     .toast{{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:#1f2937;color:#fff;font-size:.8rem;font-weight:500;padding:9px 18px;border-radius:999px;box-shadow:0 8px 32px rgba(0,0,0,.35);z-index:998;transition:transform .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none;border:1px solid rgba(255,255,255,.08);white-space:nowrap}}
     .toast.show{{transform:translateX(-50%) translateY(0)}}
     .moverlay{{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(5px);z-index:500;align-items:center;justify-content:center;padding:14px}}
@@ -247,6 +397,8 @@ def build_html(all_articles):
     .modal p{{color:var(--tx2);font-size:.84rem;line-height:1.6;margin-bottom:18px}}
     .minp{{width:100%;padding:10px 15px;border-radius:10px;border:1.5px solid var(--bdr);background:var(--sur2);color:var(--tx);font-family:'DM Sans',sans-serif;font-size:.86rem;outline:none;margin-bottom:9px}}
     .mbtn{{width:100%;background:var(--pink);color:#fff;border:none;border-radius:10px;padding:11px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.86rem;cursor:pointer}}
+
+    /* ── ANIMATIONS ── */
     .fi-card{{opacity:0;transform:translateY(14px);animation:fup .46s forwards}}
     @keyframes fup{{to{{opacity:1;transform:translateY(0)}}}}
     .fi-card:nth-child(1){{animation-delay:.04s}}.fi-card:nth-child(2){{animation-delay:.09s}}.fi-card:nth-child(3){{animation-delay:.14s}}
@@ -256,6 +408,8 @@ def build_html(all_articles):
 </head>
 <body>
 <div id="prog"></div>
+
+<!-- HEADER (sticky) -->
 <header>
   <div class="hi">
     <a href="#" class="logo"><div class="logo-sq"></div><span class="logo-txt">Daily Digest</span></a>
@@ -267,10 +421,16 @@ def build_html(all_articles):
     </div>
   </div>
 </header>
+
+<!-- TICKER (scrolls with page — no overlap) -->
 <div class="ticker-wrap">
   <div class="ticker-label">🔥 Breaking</div>
-  <div class="ticker-track">{ticker_items(all_articles)}</div>
+  <div class="ticker-outer">
+    <div class="ticker-track">{make_ticker(all_articles)}</div>
+  </div>
 </div>
+
+<!-- FILTER -->
 <nav class="fbar">
   <span class="flbl">Filter:</span>
   <button class="pill on" onclick="filter('all',this)">🗞️ All News</button>
@@ -279,61 +439,90 @@ def build_html(all_articles):
   <button class="pill" onclick="filter('geo',this)">🌍 Geopolitics</button>
   <button class="pill" onclick="filter('fash',this)">✨ Fashion</button>
 </nav>
+
 <div class="wrap">
 <div class="feed">
+
+  <!-- AI & TECH -->
   <section class="nsec vis" data-cat="tech">
     <div class="sh"><div class="si tech">🤖</div><h2 class="stitle">AI &amp; Tech</h2></div>
     <div class="cgrid">
-      {card_hero(tech[0],IMAGES['tech'][0],'t','AI & TECH')}
-      <div class="crow">{card_small(tech[1],SMALL_IMAGES['tech'][0],'t','TECH')}{card_small(tech[2] if len(tech)>2 else tech[1],SMALL_IMAGES['tech'][1],'t','TECH')}</div>
+      {card_hero(tech[0], imgs['tech'][0], 't', 'AI & TECH')}
+      <div class="crow">
+        {card_small(tech[1], imgs['tech'][1], 't', 'TECH')}
+        {card_small(tech[2] if len(tech)>2 else tech[1], imgs['tech'][2], 't', 'TECH')}
+      </div>
     </div>
   </section>
   <div class="divider"></div>
+
+  <!-- NEWSLETTER BAND -->
   <div class="nlsec vis nlband">
     <p class="nley">📬 Free Daily Newsletter</p>
     <h2 class="nlt">Stay ahead of the story</h2>
     <p class="nls">Top 5 stories every morning at 8am PST. No noise — just what matters.</p>
-    <div class="nlf"><input class="nli" type="email" placeholder="your@email.com"/><button class="nlb" onclick="subscribe()">Subscribe →</button></div>
+    <div class="nlf">
+      <input class="nli" type="email" placeholder="your@email.com"/>
+      <button class="nlb" onclick="subscribe()">Subscribe →</button>
+    </div>
     <p class="nlnote">Join 42,000+ readers · Unsubscribe anytime</p>
   </div>
+
+  <!-- MARKETS -->
   <section class="nsec vis" data-cat="mkt">
     <div class="sh"><div class="si mkt">📈</div><h2 class="stitle">Markets</h2></div>
     <div class="cgrid">
-      {card_hero(stocks[0],IMAGES['stocks'][0],'m','MARKETS')}
-      <div class="crow">{card_small(stocks[1],SMALL_IMAGES['stocks'][0],'m','MARKETS')}{card_small(stocks[2] if len(stocks)>2 else stocks[1],SMALL_IMAGES['stocks'][1],'m','MARKETS')}</div>
+      {card_hero(stocks[0], imgs['stocks'][0], 'm', 'MARKETS')}
+      <div class="crow">
+        {card_small(stocks[1], imgs['stocks'][1], 'm', 'MARKETS')}
+        {card_small(stocks[2] if len(stocks)>2 else stocks[1], imgs['stocks'][2], 'm', 'MARKETS')}
+      </div>
     </div>
   </section>
   <div class="divider"></div>
+
+  <!-- GEOPOLITICS -->
   <section class="nsec vis" data-cat="geo">
     <div class="sh"><div class="si geo">🌍</div><h2 class="stitle">Geopolitics</h2></div>
     <div class="cgrid">
-      {card_hero(geo[0],IMAGES['geo'][0],'g','WORLD')}
-      <div class="crow">{card_small(geo[1],SMALL_IMAGES['geo'][0],'g','GLOBAL')}{card_small(geo[2] if len(geo)>2 else geo[1],SMALL_IMAGES['geo'][1],'g','GLOBAL')}</div>
+      {card_hero(geo[0], imgs['geo'][0], 'g', 'WORLD')}
+      <div class="crow">
+        {card_small(geo[1], imgs['geo'][1], 'g', 'GLOBAL')}
+        {card_small(geo[2] if len(geo)>2 else geo[1], imgs['geo'][2], 'g', 'GLOBAL')}
+      </div>
     </div>
   </section>
   <div class="divider"></div>
+
+  <!-- FASHION -->
   <section class="nsec vis" data-cat="fash">
     <div class="sh"><div class="si fash">✨</div><h2 class="stitle">Fashion</h2></div>
     <div class="cgrid">
-      {card_hero(fashion[0],IMAGES['fashion'][0],'f','FASHION')}
-      <div class="crow">{card_small(fashion[1],SMALL_IMAGES['fashion'][0],'f','STYLE')}{card_small(fashion[2] if len(fashion)>2 else fashion[1],SMALL_IMAGES['fashion'][1],'f','STYLE')}</div>
+      {card_hero(fashion[0], imgs['fashion'][0], 'f', 'FASHION')}
+      <div class="crow">
+        {card_small(fashion[1], imgs['fashion'][1], 'f', 'STYLE')}
+        {card_small(fashion[2] if len(fashion)>2 else fashion[1], imgs['fashion'][2], 'f', 'STYLE')}
+      </div>
     </div>
   </section>
-</div>
+
+</div><!-- /feed -->
+
+<!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="scard">
     <h3 class="sc-title">📊 Markets Snapshot</h3>
     <div>
-      <div class="mkt-row"><div><div class="mn">S&amp;P 500</div><div class="mt">SPX</div></div><div><div class="mv">5,363</div><div class="mc dn">▼ −3.5%</div></div></div>
-      <div class="mkt-row"><div><div class="mn">NASDAQ</div><div class="mt">COMP</div></div><div><div class="mv">16,387</div><div class="mc dn">▼ −4.1%</div></div></div>
-      <div class="mkt-row"><div><div class="mn">Bitcoin</div><div class="mt">BTC</div></div><div><div class="mv">$82,400</div><div class="mc dn">▼ −1.8%</div></div></div>
-      <div class="mkt-row"><div><div class="mn">Gold</div><div class="mt">XAU</div></div><div><div class="mv">$3,238</div><div class="mc up">▲ +1.9%</div></div></div>
-      <div class="mkt-row"><div><div class="mn">Oil (WTI)</div><div class="mt">crude</div></div><div><div class="mv">$61.10</div><div class="mc dn">▼ −2.1%</div></div></div>
+      <div class="mkt-row"><div><div class="mn">S&amp;P 500</div><div class="mt">SPX</div></div><div><div class="mv">5,282</div><div class="mc dn">▼ −2.1%</div></div></div>
+      <div class="mkt-row"><div><div class="mn">NASDAQ</div><div class="mt">COMP</div></div><div><div class="mv">16,104</div><div class="mc dn">▼ −2.6%</div></div></div>
+      <div class="mkt-row"><div><div class="mn">Bitcoin</div><div class="mt">BTC</div></div><div><div class="mv">$84,200</div><div class="mc up">▲ +0.9%</div></div></div>
+      <div class="mkt-row"><div><div class="mn">Gold</div><div class="mt">XAU</div></div><div><div class="mv">$3,341</div><div class="mc up">▲ +2.3%</div></div></div>
+      <div class="mkt-row"><div><div class="mn">Oil (WTI)</div><div class="mt">crude</div></div><div><div class="mv">$65.40</div><div class="mc up">▲ +4.1%</div></div></div>
     </div>
   </div>
   <div class="scard">
     <h3 class="sc-title">🔥 Most Read Today</h3>
-    <ul class="tlist">{trending_html(all_articles)}</ul>
+    <ul class="tlist">{make_trending(all_articles)}</ul>
   </div>
   <div class="scard" style="background:linear-gradient(135deg,#0d1117,#1e1060);border-color:transparent">
     <p style="font-size:.63rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--pink);margin-bottom:5px">📬 Newsletter</p>
@@ -343,13 +532,15 @@ def build_html(all_articles):
     <button onclick="subscribe()" style="width:100%;background:var(--pink);color:#fff;border:none;border-radius:8px;padding:8px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer">Subscribe Free →</button>
   </div>
 </aside>
-</div>
+</div><!-- /wrap -->
+
+<!-- FOOTER -->
 <footer>
   <div class="fi">
     <div class="ft">
       <div class="fb">
         <a href="#" class="logo"><div class="logo-sq"></div><span class="logo-txt">Daily Digest</span></a>
-        <p>Your news, beautifully illustrated. AI, markets, geopolitics & fashion — refreshed every morning at 8am PST.</p>
+        <p>Your news, beautifully illustrated. AI, markets, geopolitics &amp; fashion — refreshed every morning at 8am PST.</p>
       </div>
       <div><p class="fct">Sections</p><ul class="flinks"><li><a href="#">🤖 AI &amp; Tech</a></li><li><a href="#">📈 Markets</a></li><li><a href="#">🌍 Geopolitics</a></li><li><a href="#">✨ Fashion</a></li></ul></div>
       <div><p class="fct">Company</p><ul class="flinks"><li><a href="#">About</a></li><li><a href="#">Newsletter</a></li><li><a href="#">Privacy</a></li><li><a href="#">Contact</a></li></ul></div>
@@ -360,6 +551,7 @@ def build_html(all_articles):
     </div>
   </div>
 </footer>
+
 <div class="moverlay" id="mo" onclick="cmo(event)">
   <div class="modal">
     <button class="mcls" onclick="closeModal()">✕</button>
@@ -372,6 +564,7 @@ def build_html(all_articles):
   </div>
 </div>
 <div class="toast" id="toast"></div>
+
 <script>
   const t=localStorage.getItem('dd-theme')||'light';
   document.documentElement.setAttribute('data-theme',t);
@@ -392,12 +585,12 @@ def build_html(all_articles):
 </html>"""
 
 if __name__ == "__main__":
-    print("Fetching news...")
-    all_articles = {}
+    print(f"Daily Digest update — {TODAY}")
+    all_articles = {{}}
     for cat, params in QUERIES.items():
-        print(f"  → {cat}")
+        print(f"  Fetching {cat}...")
         all_articles[cat] = fetch_articles(cat, params)
     print("Building HTML...")
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(build_html(all_articles))
-    print(f"✅ Done — {TODAY}")  
+    print(f"✅ Done! index.html rebuilt for {TODAY}")
