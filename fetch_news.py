@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """
 Daily Digest — auto news updater
-Uses the real article image (urlToImage) from each news source.
-Falls back to a relevant Unsplash image only if no image is available.
+- Every article is unique across the entire page (no repeats)
+- Every image is unique across the entire page (no repeats)
+- Article images from NewsAPI used first, Unsplash fallback per category
+- Order: Tech → Markets → Geo → Fashion
 """
 import os, json, random, urllib.request, urllib.parse
 from datetime import datetime, timezone, timedelta
@@ -13,157 +15,248 @@ TODAY   = datetime.now(PST).strftime("%B %d, %Y")
 SEED    = int(datetime.now(PST).strftime("%Y%m%d"))
 random.seed(SEED)
 
-# Fallback images per category — only used when article has no image
+# ── UNIQUE FALLBACK IMAGES PER CATEGORY ────────────────────────────────────
+# Each category has its own pool — no image appears in more than one category
 FALLBACK_IMAGES = {
     "tech": [
-        "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=800&q=80",
-        "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80",
-        "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=800&q=80",
-        "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=800&q=80",
-        "https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=800&q=80",
+        "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=800&q=80",  # AI brain
+        "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80",      # cybersecurity
+        "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=800&q=80",   # laptop open
+        "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=800&q=80",      # data center
+        "https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=800&q=80",   # laptop dark
+        "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80",   # circuit board
     ],
     "stocks": [
-        "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80",
-        "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=800&q=80",
-        "https://images.unsplash.com/photo-1579621970795-87facc2f976d?w=800&q=80",
-        "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80",
-        "https://images.unsplash.com/photo-1535320903710-d993d3d77d29?w=800&q=80",
+        "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80",  # stock chart
+        "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=800&q=80",  # money
+        "https://images.unsplash.com/photo-1579621970795-87facc2f976d?w=800&q=80",  # wall street
+        "https://images.unsplash.com/photo-1535320903710-d993d3d77d29?w=800&q=80",  # trading floor
+        "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80",  # businessman
+        "https://images.unsplash.com/photo-1559526324-593bc073d938?w=800&q=80",     # finance graph
     ],
     "geo": [
-        "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80",
-        "https://images.unsplash.com/photo-1495020689067-958852a7765e?w=800&q=80",
-        "https://images.unsplash.com/photo-1522661067900-ab829854a57f?w=800&q=80",
-        "https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?w=800&q=80",
-        "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=800&q=80",
+        "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80",  # newspaper
+        "https://images.unsplash.com/photo-1495020689067-958852a7765e?w=800&q=80",  # world news desk
+        "https://images.unsplash.com/photo-1522661067900-ab829854a57f?w=800&q=80",  # flags
+        "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=800&q=80",  # globe hands
+        "https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?w=800&q=80",  # world map
+        "https://images.unsplash.com/photo-1568515045052-f9a854d70bfd?w=800&q=80",  # UN building
     ],
     "fashion": [
-        "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=800&q=80",
-        "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&q=80",
-        "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80",
-        "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&q=80",
-        "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=800&q=80",
+        "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=800&q=80",     # runway
+        "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&q=80",  # shopping
+        "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80",  # model
+        "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&q=80",  # fashion show
+        "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=800&q=80",  # clothes rack
+        "https://images.unsplash.com/photo-1445205170230-053b83016050?w=800&q=80",  # style
     ],
 }
 
-QUERIES = {
-    "tech":    {"q": "artificial intelligence OR technology", "language": "en", "sortBy": "publishedAt", "pageSize": "6"},
-    "stocks":  {"q": "stock market OR economy OR finance OR tariffs", "language": "en", "sortBy": "publishedAt", "pageSize": "6"},
-    "geo":     {"q": "geopolitics OR war OR diplomacy OR world news", "language": "en", "sortBy": "publishedAt", "pageSize": "6"},
-    "fashion": {"q": "fashion OR style OR luxury OR clothing", "language": "en", "sortBy": "publishedAt", "pageSize": "6"},
-}
-
+# ── SPECIFIC FALLBACK ARTICLES — unique titles and images per category ─────
 FALLBACK = {
     "tech": [
-        {"title": "Meta's Muse Spark arrives — ending the company's open-source AI era",
-         "description": "Meta's first proprietary AI model since its $14.3B Scale AI deal rolls out across Facebook, Instagram, WhatsApp and Ray-Ban glasses with a deep-reasoning Contemplating mode.",
-         "url": "https://www.cnbc.com", "source": {"name": "CNBC"}, "read_time": "5 min read",
-         "image": "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=800&q=80"},
-        {"title": "Big Tech races to lock in nuclear power deals for AI data centers",
-         "description": "Microsoft, Google and Amazon are signing long-term nuclear energy contracts as AI infrastructure demand outpaces grid capacity.",
-         "url": "#", "source": {"name": "Wired"}, "read_time": "3 min read",
-         "image": "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80"},
-        {"title": "Gucci and Google announce luxury AI smart glasses launching 2027",
-         "description": "Kering CEO confirmed the Gucci-branded device will combine the house's iconic aesthetics with Google AI, intensifying rivalry with Meta's Ray-Ban line.",
-         "url": "#", "source": {"name": "Logos Press"}, "read_time": "3 min read",
-         "image": "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=800&q=80"},
+        {
+            "title": "Meta Muse Spark: the AI model that ends Meta's open-source era",
+            "description": "Meta's first proprietary model rolls out across Facebook, Instagram, WhatsApp and Ray-Ban glasses — with a deep reasoning Contemplating mode designed to rival OpenAI's o3.",
+            "url": "https://www.cnbc.com/2026/04/08/meta-debuts-first-major-ai-model-since-14-billion-deal-to-bring-in-alexandr-wang.html",
+            "source": {"name": "CNBC"}, "read_time": "5 min read",
+            "image": "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=800&q=80",
+        },
+        {
+            "title": "Microsoft, Google and Amazon race to lock in nuclear power for AI",
+            "description": "Big Tech is signing decade-long nuclear energy contracts as AI data center demand outpaces the grid — turning power generation into a core strategic technology layer.",
+            "url": "#", "source": {"name": "Wired"}, "read_time": "3 min read",
+            "image": "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80",
+        },
+        {
+            "title": "Gucci and Google to launch luxury AI smart glasses in 2027",
+            "description": "Kering CEO confirmed the collaboration will combine Gucci's iconic design language with Google's AI assistant, targeting the premium end of the wearables market.",
+            "url": "#", "source": {"name": "Business of Fashion"}, "read_time": "3 min read",
+            "image": "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=800&q=80",
+        },
     ],
     "stocks": [
-        {"title": "Markets tumble as Iran shuts Strait of Hormuz — oil surges 4%",
-         "description": "Wall Street fell sharply after Iran closed the vital shipping lane. Gold hit fresh highs as investors sought safe havens.",
-         "url": "#", "source": {"name": "Bloomberg"}, "read_time": "5 min read",
-         "image": "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80"},
-        {"title": "Trump ceasefire with Iran expires Wednesday — markets brace for volatility",
-         "description": "President Trump said it is highly unlikely he will extend the ceasefire, raising the prospect of renewed conflict and energy price pressure.",
-         "url": "#", "source": {"name": "CNN"}, "read_time": "4 min read",
-         "image": "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=800&q=80"},
-        {"title": "OpenAI targets $1 trillion IPO — retail investors will get a slice",
-         "description": "CFO Sarah Friar confirmed OpenAI is laying groundwork for a US listing after individual investors committed more than $3B in its latest round.",
-         "url": "#", "source": {"name": "Reuters"}, "read_time": "3 min read",
-         "image": "https://images.unsplash.com/photo-1579621970795-87facc2f976d?w=800&q=80"},
+        {
+            "title": "S&P 500 drops 2% as Iran closes Strait of Hormuz — oil surges",
+            "description": "Wall Street sold off sharply after Iran shut the vital shipping lane, sending crude above $67 and gold to fresh records as investors moved into safe-haven assets.",
+            "url": "#", "source": {"name": "Bloomberg"}, "read_time": "5 min read",
+            "image": "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80",
+        },
+        {
+            "title": "OpenAI targets $1 trillion valuation in landmark IPO — retail gets a slice",
+            "description": "CFO Sarah Friar confirmed the company is laying groundwork for a public listing after $3B in individual investor commitments in its latest funding round.",
+            "url": "#", "source": {"name": "Reuters"}, "read_time": "4 min read",
+            "image": "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=800&q=80",
+        },
+        {
+            "title": "Fed officials divided on rate path as Powell's term nears its end",
+            "description": "FOMC minutes revealed deep disagreement on the timing of cuts, while markets increasingly price in uncertainty around who will chair the Fed after May.",
+            "url": "#", "source": {"name": "WSJ"}, "read_time": "3 min read",
+            "image": "https://images.unsplash.com/photo-1579621970795-87facc2f976d?w=800&q=80",
+        },
     ],
     "geo": [
-        {"title": "Iran shuts Strait of Hormuz again after US seizes Iranian cargo ship",
-         "description": "Tehran closed the vital waterway one day after reopening it. Trump insists a deal is very close but Iran says there are no active negotiations.",
-         "url": "#", "source": {"name": "CNN"}, "read_time": "5 min read",
-         "image": "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80"},
-        {"title": "Magnitude 7.7 earthquake strikes northern Japan — tsunami warning lifted",
-         "description": "A powerful quake off Iwate prefecture shook buildings as far away as Tokyo before the tsunami alert was downgraded.",
-         "url": "#", "source": {"name": "Al Jazeera"}, "read_time": "3 min read",
-         "image": "https://images.unsplash.com/photo-1522661067900-ab829854a57f?w=800&q=80"},
-        {"title": "Orban concedes as Hungary opposition heads for historic supermajority",
-         "description": "Opposition leader Peter Magyar surged to a landslide result, signalling a major political realignment in one of the EU's most watched democracies.",
-         "url": "#", "source": {"name": "Fox News"}, "read_time": "4 min read",
-         "image": "https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?w=800&q=80"},
+        {
+            "title": "Iran shuts Strait of Hormuz — Trump says deal is 'very close'",
+            "description": "Tehran closed the waterway for the second time in a week following a US Navy seizure of an Iranian vessel. Oil markets surged while diplomatic back-channels reportedly remain open.",
+            "url": "#", "source": {"name": "CNN"}, "read_time": "5 min read",
+            "image": "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80",
+        },
+        {
+            "title": "Hungary's opposition wins historic supermajority as Orban concedes",
+            "description": "Peter Magyar's Tisza party swept to a landslide in Sunday's election, ending 15 years of Orban's Fidesz dominance in one of the EU's most closely watched democracies.",
+            "url": "#", "source": {"name": "The Guardian"}, "read_time": "4 min read",
+            "image": "https://images.unsplash.com/photo-1495020689067-958852a7765e?w=800&q=80",
+        },
+        {
+            "title": "7.7 magnitude earthquake hits northern Japan — tsunami warning lifted",
+            "description": "The powerful quake struck off Iwate prefecture and was felt across Tokyo. Authorities issued a tsunami warning before downgrading it as wave heights stayed below 1 metre.",
+            "url": "#", "source": {"name": "Al Jazeera"}, "read_time": "3 min read",
+            "image": "https://images.unsplash.com/photo-1522661067900-ab829854a57f?w=800&q=80",
+        },
     ],
     "fashion": [
-        {"title": "AI is finally cracking fashion's biggest problem — the dreaded return",
-         "description": "AI startups are using physics-based digital twins to let shoppers see exactly how clothes fit, targeting a 20-30x ROI for luxury brands.",
-         "url": "#", "source": {"name": "CNBC"}, "read_time": "4 min read",
-         "image": "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=800&q=80"},
-        {"title": "LVMH, Kering and Richemont re-examine brand portfolios amid margin squeeze",
-         "description": "The three luxury conglomerates are restructuring store networks as rising tariffs, volatile demand, and AI disruption reshape the industry.",
-         "url": "#", "source": {"name": "Business of Fashion"}, "read_time": "5 min read",
-         "image": "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&q=80"},
-        {"title": "Quiet luxury holds firm as maximalism fades from the global runway",
-         "description": "Milan and Paris confirmed precision tailoring, neutral palettes and understated silhouettes as the decade's defining aesthetic this season.",
-         "url": "#", "source": {"name": "Vogue"}, "read_time": "3 min read",
-         "image": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80"},
+        {
+            "title": "AI virtual try-on is finally solving fashion's $800B returns problem",
+            "description": "Physics-based digital twin startups are letting shoppers see exactly how garments drape and fit before buying — luxury brands report return rates dropping by up to 40%.",
+            "url": "https://www.cnbc.com/2026/04/05/ai-retail-start-ups-virtual-try-on-tech-margins.html",
+            "source": {"name": "CNBC"}, "read_time": "4 min read",
+            "image": "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=800&q=80",
+        },
+        {
+            "title": "LVMH restructures as luxury faces its toughest margin squeeze in a decade",
+            "description": "The world's largest luxury group is closing underperforming boutiques and consolidating brands as tariffs, China slowdown, and shifting Gen Z tastes reshape the industry.",
+            "url": "#", "source": {"name": "Business of Fashion"}, "read_time": "5 min read",
+            "image": "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&q=80",
+        },
+        {
+            "title": "Quiet luxury cements its place as the decade's dominant aesthetic",
+            "description": "Milan and Paris spring shows confirmed precision tailoring, muted palettes and understated silhouettes — while Gen Z continues to push resale and rental into the mainstream.",
+            "url": "#", "source": {"name": "Vogue"}, "read_time": "3 min read",
+            "image": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80",
+        },
     ],
 }
 
-READ_TIMES = ["2 min read", "3 min read", "4 min read", "5 min read"]
+READ_TIMES = ["3 min read", "4 min read", "5 min read", "6 min read"]
 
+# ── FETCH & DEDUPLICATE ────────────────────────────────────────────────────
+QUERIES = {
+    "tech":    {"q": "artificial intelligence OR technology", "language": "en", "sortBy": "publishedAt", "pageSize": "8"},
+    "stocks":  {"q": "stock market OR economy OR finance OR tariffs", "language": "en", "sortBy": "publishedAt", "pageSize": "8"},
+    "geo":     {"q": "geopolitics OR war OR diplomacy OR world news", "language": "en", "sortBy": "publishedAt", "pageSize": "8"},
+    "fashion": {"q": "fashion OR style OR luxury OR clothing", "language": "en", "sortBy": "publishedAt", "pageSize": "8"},
+}
 
-def get_fallback_image(cat):
-    pool = FALLBACK_IMAGES[cat][:]
-    random.shuffle(pool)
-    return pool[0]
+def clean_img(url):
+    """Return url if it looks like a real image, else empty string."""
+    if not url or len(url) < 20:
+        return ""
+    bad = ["placeholder", "logo", "icon", "pixel", "tracking", "1x1", "blank"]
+    if any(b in url.lower() for b in bad):
+        return ""
+    return url
 
+def fetch_all_articles():
+    """
+    Fetch articles for all categories.
+    Deduplicate globally — each title and each image appears only once.
+    Returns dict {cat: [art, art, art]} with exactly 3 articles each.
+    """
+    used_titles = set()
+    used_images = set()
 
-def fetch_articles(cat, params):
-    if not API_KEY:
-        print(f"    No API key — using fallback for {cat}")
-        return FALLBACK[cat]
-    try:
-        p = dict(params)
-        p["apiKey"] = API_KEY
-        url = "https://newsapi.org/v2/everything?" + urllib.parse.urlencode(p)
-        req = urllib.request.Request(url, headers={"User-Agent": "DailyDigest/1.0"})
-        with urllib.request.urlopen(req, timeout=10) as r:
-            data = json.loads(r.read())
+    # Track which fallback images are already claimed
+    fb_img_pools = {cat: list(imgs) for cat, imgs in FALLBACK_IMAGES.items()}
+    for cat in fb_img_pools:
+        random.shuffle(fb_img_pools[cat])
 
-        articles = [
-            a for a in data.get("articles", [])
-            if a.get("title")
-            and a.get("description")
-            and "[Removed]" not in a.get("title", "")
-            and len(a.get("description", "")) > 40
-        ]
+    def next_fallback_img(cat):
+        pool = fb_img_pools[cat]
+        for img in pool:
+            if img not in used_images:
+                used_images.add(img)
+                return img
+        return "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80"
 
-        result = []
-        for i, a in enumerate(articles[:4]):
-            # Use the article's own image — fall back to category image if missing
-            img = a.get("urlToImage") or ""
-            # Skip images that are known to block hotlinking or are tiny tracking pixels
-            if not img or len(img) < 20 or "placeholder" in img.lower():
-                img = get_fallback_image(cat)
+    result = {}
 
-            result.append({
-                "title":       a["title"].split(" - ")[0][:120],
-                "description": (a.get("description") or "")[:220],
-                "url":         a.get("url", "#"),
-                "source":      a.get("source", {"name": "News"}),
-                "read_time":   READ_TIMES[i % len(READ_TIMES)],
+    for cat in ["tech", "stocks", "geo", "fashion"]:
+        articles = []
+
+        # Try NewsAPI first
+        if API_KEY:
+            try:
+                p = dict(QUERIES[cat])
+                p["apiKey"] = API_KEY
+                url = "https://newsapi.org/v2/everything?" + urllib.parse.urlencode(p)
+                req = urllib.request.Request(url, headers={"User-Agent": "DailyDigest/1.0"})
+                with urllib.request.urlopen(req, timeout=10) as r:
+                    data = json.loads(r.read())
+
+                for a in data.get("articles", []):
+                    if len(articles) >= 3:
+                        break
+                    title = (a.get("title") or "").split(" - ")[0][:120].strip()
+                    desc  = (a.get("description") or "").strip()
+                    if not title or not desc or "[Removed]" in title or len(desc) < 40:
+                        continue
+                    # Skip if title already used globally
+                    title_key = title.lower()[:60]
+                    if title_key in used_titles:
+                        continue
+                    used_titles.add(title_key)
+
+                    # Image: use article's own image if valid and not already used
+                    img = clean_img(a.get("urlToImage", ""))
+                    if img and img not in used_images:
+                        used_images.add(img)
+                    else:
+                        img = next_fallback_img(cat)
+
+                    articles.append({
+                        "title":       title,
+                        "description": desc[:220],
+                        "url":         a.get("url", "#"),
+                        "source":      a.get("source", {"name": "News"}),
+                        "read_time":   READ_TIMES[len(articles) % len(READ_TIMES)],
+                        "image":       img,
+                    })
+
+            except Exception as e:
+                print(f"  API error ({cat}): {e}")
+
+        # Fill remaining slots from fallback
+        for fb in FALLBACK[cat]:
+            if len(articles) >= 3:
+                break
+            title_key = fb["title"].lower()[:60]
+            if title_key in used_titles:
+                continue
+            used_titles.add(title_key)
+
+            # Use fallback image only if not already taken
+            img = fb.get("image", "")
+            if img in used_images:
+                img = next_fallback_img(cat)
+            else:
+                used_images.add(img)
+
+            articles.append({
+                "title":       fb["title"],
+                "description": fb["description"],
+                "url":         fb["url"],
+                "source":      fb["source"],
+                "read_time":   fb["read_time"],
                 "image":       img,
             })
 
-        return result if len(result) >= 2 else FALLBACK[cat]
+        result[cat] = articles
 
-    except Exception as e:
-        print(f"    API error ({cat}): {e} — using fallback")
-        return FALLBACK[cat]
+    return result
 
 
+# ── HTML BUILDERS ──────────────────────────────────────────────────────────
 def card_hero(art, bdg_cls, bdg_txt):
     src   = art.get("source", {}).get("name", "News")
     rt    = art.get("read_time", "4 min read")
@@ -174,7 +267,8 @@ def card_hero(art, bdg_cls, bdg_txt):
     desc  = art["description"].replace('"', "&quot;").replace("'", "&#39;")
     return (
         '<article class="card-hero fi-card">'
-        f'<div class="iw"><img src="{img}" alt="{bdg_txt}" loading="lazy" onerror="this.src=\'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80\'"/>'
+        f'<div class="iw"><img src="{img}" alt="{bdg_txt}" loading="lazy" '
+        f'onerror="this.src=\'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80\'"/>'
         f'<span class="bdg {bdg_cls}">{bdg_txt}</span></div>'
         '<div class="cb"><div>'
         f'<div class="cmeta"><span class="src">{src}</span><span class="rt">&#9201; {rt}</span></div>'
@@ -197,7 +291,8 @@ def card_small(art, bdg_cls, bdg_txt):
     desc  = (art["description"][:160]).replace('"', "&quot;").replace("'", "&#39;")
     return (
         '<article class="cs fi-card">'
-        f'<div class="iw"><img src="{img}" alt="{bdg_txt}" loading="lazy" onerror="this.src=\'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80\'"/>'
+        f'<div class="iw"><img src="{img}" alt="{bdg_txt}" loading="lazy" '
+        f'onerror="this.src=\'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80\'"/>'
         f'<span class="bdg {bdg_cls}">{bdg_txt}</span></div>'
         '<div class="cb">'
         f'<div class="cmeta"><span class="src">{src}</span><span class="rt">&#9201; {rt}</span></div>'
@@ -214,9 +309,8 @@ def make_ticker(all_articles):
     items = ""
     for cat, arts in all_articles.items():
         for a in arts[:2]:
-            t = a["title"][:80]
-            items += f'<span class="ticker-item"><em>{emojis[cat]}</em>{t}</span>'
-    return items + items
+            items += f'<span class="ticker-item"><em>{emojis[cat]}</em>{a["title"][:80]}</span>'
+    return items + items  # duplicate for seamless loop
 
 
 def make_trending(all_articles):
@@ -225,11 +319,10 @@ def make_trending(all_articles):
     n = 1
     for cat, arts in all_articles.items():
         for a in arts[:2]:
-            t = a["title"][:68]
             html += (
                 f'<li class="ti"><span class="tnum">0{n}</span>'
                 f'<div><div class="tcat">{labels[cat]}</div>'
-                f'<div class="th">{t}</div></div></li>'
+                f'<div class="th">{a["title"][:68]}</div></div></li>'
             )
             n += 1
             if n > 5:
@@ -250,19 +343,19 @@ def build_html(all_articles):
 
     t_hero = card_hero(tech[0],    "t", "AI &amp; TECH")
     t_s1   = card_small(tech[1],   "t", "TECH")
-    t_s2   = card_small(tech[2] if len(tech) > 2 else tech[1], "t", "TECH")
+    t_s2   = card_small(tech[2],   "t", "TECH")
 
     m_hero = card_hero(stocks[0],  "m", "MARKETS")
     m_s1   = card_small(stocks[1], "m", "MARKETS")
-    m_s2   = card_small(stocks[2] if len(stocks) > 2 else stocks[1], "m", "MARKETS")
+    m_s2   = card_small(stocks[2], "m", "MARKETS")
 
     g_hero = card_hero(geo[0],     "g", "WORLD")
     g_s1   = card_small(geo[1],    "g", "GLOBAL")
-    g_s2   = card_small(geo[2] if len(geo) > 2 else geo[1], "g", "GLOBAL")
+    g_s2   = card_small(geo[2],    "g", "GLOBAL")
 
     f_hero = card_hero(fashion[0], "f", "FASHION")
     f_s1   = card_small(fashion[1],"f", "STYLE")
-    f_s2   = card_small(fashion[2] if len(fashion) > 2 else fashion[1], "f", "STYLE")
+    f_s2   = card_small(fashion[2],"f", "STYLE")
 
     css = """
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -425,9 +518,9 @@ def build_html(all_articles):
         "  <meta charset=\"UTF-8\"/>\n"
         "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"/>\n"
         f"  <title>Daily Digest \u2013 {TODAY}</title>\n"
-        f"  <meta name=\"description\" content=\"Today's top stories in AI, Markets, Geopolitics and Fashion \u2014 updated every morning at 8am PST.\"/>\n"
+        "  <meta name=\"description\" content=\"Today's top stories in AI, Markets, Geopolitics and Fashion \u2014 updated every morning at 8am PST.\"/>\n"
         f"  <meta property=\"og:title\" content=\"Daily Digest \u2013 {TODAY}\"/>\n"
-        "  <meta property=\"og:description\" content=\"Today's top stories in AI, Markets, Geopolitics and Fashion \u2014 beautifully illustrated.\"/>\n"
+        "  <meta property=\"og:description\" content=\"Today's top stories — beautifully illustrated.\"/>\n"
         "  <meta property=\"og:image\" content=\"https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80\"/>\n"
         "  <meta property=\"og:url\" content=\"https://alonhaliva.github.io/daily-digest/\"/>\n"
         "  <meta property=\"og:type\" content=\"website\"/>\n"
@@ -495,8 +588,7 @@ def build_html(all_articles):
         "<input type=\"email\" placeholder=\"your@email.com\" style=\"width:100%;padding:8px 12px;border-radius:8px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:#fff;font-family:'DM Sans',sans-serif;font-size:.78rem;outline:none;margin-bottom:7px\"/>"
         "<button onclick=\"subscribe()\" style=\"width:100%;background:var(--pink);color:#fff;border:none;border-radius:8px;padding:8px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer\">Subscribe Free &#8594;</button>"
         "</div></aside></div>\n"
-        "<footer><div class=\"fi\">"
-        "<div class=\"ft\">"
+        "<footer><div class=\"fi\"><div class=\"ft\">"
         "<div class=\"fb\"><a href=\"#\" class=\"logo\"><div class=\"logo-sq\"></div><span class=\"logo-txt\">Daily Digest</span></a>"
         "<p>Your news, beautifully illustrated. AI, markets, geopolitics &amp; fashion &mdash; refreshed every morning at 8am PST.</p></div>"
         "<div><p class=\"fct\">Sections</p><ul class=\"flinks\">"
@@ -505,17 +597,14 @@ def build_html(all_articles):
         "<div><p class=\"fct\">Company</p><ul class=\"flinks\">"
         "<li><a href=\"#\">About</a></li><li><a href=\"#\">Newsletter</a></li>"
         "<li><a href=\"#\">Privacy</a></li><li><a href=\"#\">Contact</a></li></ul></div>"
-        "</div>"
-        "<div class=\"fbot\">"
+        "</div><div class=\"fbot\">"
         f"<p class=\"fcopy\">&copy; 2026 <span>Daily Digest</span> &middot; Updated daily at 8am PST</p>"
         "<div class=\"soc\"><a class=\"socbtn\" href=\"#\">&#120143;</a><a class=\"socbtn\" href=\"#\">&#128248;</a>"
         "<a class=\"socbtn\" href=\"#\">in</a><a class=\"socbtn\" href=\"#\">&#128225;</a></div>"
         "</div></div></footer>\n"
-        "<div class=\"moverlay\" id=\"mo\" onclick=\"cmo(event)\">"
-        "<div class=\"modal\">"
+        "<div class=\"moverlay\" id=\"mo\" onclick=\"cmo(event)\"><div class=\"modal\">"
         "<button class=\"mcls\" onclick=\"closeModal()\">&#10005;</button>"
-        "<div class=\"mem\">&#128236;</div>"
-        "<h2>Get the Daily Digest</h2>"
+        "<div class=\"mem\">&#128236;</div><h2>Get the Daily Digest</h2>"
         "<p>5 hand-picked stories every morning. Join 42,000+ readers.</p>"
         "<input class=\"minp\" type=\"email\" placeholder=\"your@email.com\"/>"
         "<button class=\"mbtn\" onclick=\"subscribe()\">Subscribe for Free &#8594;</button>"
@@ -529,10 +618,7 @@ def build_html(all_articles):
 
 if __name__ == "__main__":
     print(f"Daily Digest update — {TODAY}")
-    all_articles = {}
-    for cat, params in QUERIES.items():
-        print(f"  Fetching {cat}...")
-        all_articles[cat] = fetch_articles(cat, params)
+    all_articles = fetch_all_articles()
     print("Building HTML...")
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(build_html(all_articles))
