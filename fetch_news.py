@@ -481,14 +481,23 @@ def build_html(all_articles):
     .toast.show{transform:translateX(-50%) translateY(0)}
     .moverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(5px);z-index:500;align-items:center;justify-content:center;padding:14px}
     .moverlay.open{display:flex}
-    .modal{background:var(--sur);border-radius:20px;padding:32px;max-width:440px;width:100%;position:relative;box-shadow:0 32px 80px rgba(0,0,0,.45);animation:minIn .32s cubic-bezier(.34,1.3,.64,1);border:1px solid var(--bdr)}
+    .modal{background:var(--sur);border-radius:20px;padding:32px;max-width:460px;width:100%;position:relative;box-shadow:0 32px 80px rgba(0,0,0,.45);animation:minIn .32s cubic-bezier(.34,1.3,.64,1);border:1px solid var(--bdr)}
     @keyframes minIn{from{transform:scale(.88) translateY(16px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
     .mcls{position:absolute;top:12px;right:12px;background:var(--sur2);border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;color:var(--tx2)}
-    .mem{font-size:2rem;margin-bottom:9px}
-    .modal h2{font-family:'DM Serif Display',serif;font-size:1.5rem;color:var(--tx);margin-bottom:7px}
+    .mem{font-size:2.2rem;margin-bottom:10px}
+    .modal h2{font-family:'DM Serif Display',serif;font-size:1.5rem;color:var(--tx);margin-bottom:6px}
     .modal p{color:var(--tx2);font-size:.84rem;line-height:1.6;margin-bottom:18px}
-    .minp{width:100%;padding:10px 15px;border-radius:10px;border:1.5px solid var(--bdr);background:var(--sur2);color:var(--tx);font-family:'DM Sans',sans-serif;font-size:.86rem;outline:none;margin-bottom:9px}
-    .mbtn{width:100%;background:var(--pink);color:#fff;border:none;border-radius:10px;padding:11px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.86rem;cursor:pointer}
+    .minp{width:100%;padding:11px 15px;border-radius:10px;border:1.5px solid var(--bdr);background:var(--sur2);color:var(--tx);font-family:'DM Sans',sans-serif;font-size:.86rem;outline:none;margin-bottom:10px;transition:border-color .2s}
+    .minp:focus{border-color:var(--pink)}
+    .minp::placeholder{color:var(--tx3)}
+    .mbtn{width:100%;background:var(--pink);color:#fff;border:none;border-radius:10px;padding:12px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.88rem;cursor:pointer;transition:opacity .18s,transform .18s}
+    .mbtn:hover{opacity:.88;transform:translateY(-1px)}
+    .mbtn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+    .modal-success{display:none;text-align:center;padding:10px 0}
+    .modal-success .ms-icon{font-size:3rem;margin-bottom:12px}
+    .modal-success h3{font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--tx);margin-bottom:8px}
+    .modal-success p{color:var(--tx2);font-size:.86rem;line-height:1.6}
+    .minp-label{display:block;font-size:.74rem;font-weight:600;color:var(--tx2);margin-bottom:4px;letter-spacing:.04em}
     .fi-card{opacity:0;transform:translateY(14px);animation:fup .46s forwards}
     @keyframes fup{to{opacity:1;transform:translateY(0)}}
     .fi-card:nth-child(1){animation-delay:.04s}.fi-card:nth-child(2){animation-delay:.09s}.fi-card:nth-child(3){animation-delay:.14s}
@@ -503,11 +512,48 @@ def build_html(all_articles):
     function toggleTheme(){const n=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);localStorage.setItem('dd-theme',n);document.getElementById('themeBtn').textContent=n==='dark'?'☀️':'🌙';toast(n==='dark'?'🌙 Dark mode on':'☀️ Light mode on')}
     function filter(cat,btn){document.querySelectorAll('.pill').forEach(p=>p.classList.remove('on'));btn.classList.add('on');document.querySelectorAll('.nsec').forEach(s=>s.classList.toggle('vis',cat==='all'||s.dataset.cat===cat));const nl=document.querySelector('.nlsec');if(nl)nl.classList.toggle('vis',cat==='all')}
     function save(b){b.classList.toggle('saved');toast(b.classList.contains('saved')?'🔖 Article saved!':'Removed from saved')}
-    function subscribe(){closeModal();toast('🎉 You are subscribed! Check your inbox.')}
-    function openModal(){document.getElementById('mo').classList.add('open')}
+    function openModal(){
+      document.getElementById('mo').classList.add('open');
+      document.getElementById('modal-form').style.display='block';
+      document.getElementById('modal-success').style.display='none';
+      document.getElementById('sub-name').value='';
+      document.getElementById('sub-email').value='';
+    }
     function closeModal(){document.getElementById('mo').classList.remove('open')}
     function cmo(e){if(e.target.id==='mo')closeModal()}
     document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+    async function submitForm(e){
+      e.preventDefault();
+      const name=document.getElementById('sub-name').value.trim();
+      const email=document.getElementById('sub-email').value.trim();
+      if(!name||!email){toast('Please fill in both fields');return;}
+      const btn=document.getElementById('sub-btn');
+      btn.disabled=true;btn.textContent='Sending...';
+      try{
+        const res=await fetch('https://formspree.io/f/xwvajbaz',{
+          method:'POST',
+          headers:{'Content-Type':'application/json','Accept':'application/json'},
+          body:JSON.stringify({name,email,source:'Daily Digest Newsletter'})
+        });
+        if(res.ok){
+          document.getElementById('modal-form').style.display='none';
+          document.getElementById('modal-success').style.display='block';
+        } else {
+          toast('Something went wrong. Please try again.');
+          btn.disabled=false;btn.textContent='Subscribe for Free \u2192';
+        }
+      } catch(err){
+        toast('Network error. Please try again.');
+        btn.disabled=false;btn.textContent='Subscribe for Free \u2192';
+      }
+    }
+    function quickSubscribe(emailInputId){
+      const email=document.getElementById(emailInputId).value.trim();
+      if(!email||!email.includes('@')){toast('Please enter a valid email');return;}
+      document.getElementById('sub-email').value=email;
+      openModal();
+      document.getElementById('sub-name').focus();
+    }
     let tt;
     function toast(m){const el=document.getElementById('toast');el.textContent=m;el.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>el.classList.remove('show'),2800)}
     window.addEventListener('scroll',()=>{const h=document.documentElement.scrollHeight-window.innerHeight;document.getElementById('prog').style.width=(h>0?(scrollY/h)*100:0)+'%'});
@@ -557,8 +603,8 @@ def build_html(all_articles):
         "<p class=\"nley\">&#128236; Free Daily Newsletter</p>"
         "<h2 class=\"nlt\">Stay ahead of the story</h2>"
         "<p class=\"nls\">Top 5 stories every morning at 8am PST. No noise &mdash; just what matters.</p>"
-        "<div class=\"nlf\"><input class=\"nli\" type=\"email\" placeholder=\"your@email.com\"/>"
-        "<button class=\"nlb\" onclick=\"subscribe()\">Subscribe &#8594;</button></div>"
+        "<div class=\"nlf\"><input class=\"nli\" id=\"nl-email\" type=\"email\" placeholder=\"your@email.com\"/>"
+        "<button class=\"nlb\" onclick=\"quickSubscribe('nl-email')\">Subscribe &#8594;</button></div>"
         "<p class=\"nlnote\">Join 42,000+ readers &middot; Unsubscribe anytime</p></div>\n"
         "  <section class=\"nsec vis\" data-cat=\"mkt\">"
         "<div class=\"sh\"><div class=\"si mkt\">&#128200;</div><h2 class=\"stitle\">Markets</h2></div>"
@@ -585,8 +631,8 @@ def build_html(all_articles):
         "<p style=\"font-size:.63rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--pink);margin-bottom:5px\">&#128236; Newsletter</p>"
         "<p style=\"font-family:'DM Serif Display',serif;font-size:1rem;color:#fff;margin-bottom:5px\">5 stories. Every morning.</p>"
         "<p style=\"font-size:.74rem;color:#6b7280;margin-bottom:13px;line-height:1.5\">Updated daily at 8am PST.</p>"
-        "<input type=\"email\" placeholder=\"your@email.com\" style=\"width:100%;padding:8px 12px;border-radius:8px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:#fff;font-family:'DM Sans',sans-serif;font-size:.78rem;outline:none;margin-bottom:7px\"/>"
-        "<button onclick=\"subscribe()\" style=\"width:100%;background:var(--pink);color:#fff;border:none;border-radius:8px;padding:8px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer\">Subscribe Free &#8594;</button>"
+        "<input type=\"email\" id=\"sb-email\" placeholder=\"your@email.com\" style=\"width:100%;padding:8px 12px;border-radius:8px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:#fff;font-family:'DM Sans',sans-serif;font-size:.78rem;outline:none;margin-bottom:7px\"/>"
+        "<button onclick=\"quickSubscribe('sb-email')\" style=\"width:100%;background:var(--pink);color:#fff;border:none;border-radius:8px;padding:8px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer\">Subscribe Free &#8594;</button>"
         "</div></aside></div>\n"
         "<footer><div class=\"fi\"><div class=\"ft\">"
         "<div class=\"fb\"><a href=\"#\" class=\"logo\"><div class=\"logo-sq\"></div><span class=\"logo-txt\">Daily Digest</span></a>"
@@ -604,11 +650,23 @@ def build_html(all_articles):
         "</div></div></footer>\n"
         "<div class=\"moverlay\" id=\"mo\" onclick=\"cmo(event)\"><div class=\"modal\">"
         "<button class=\"mcls\" onclick=\"closeModal()\">&#10005;</button>"
-        "<div class=\"mem\">&#128236;</div><h2>Get the Daily Digest</h2>"
-        "<p>5 hand-picked stories every morning. Join 42,000+ readers.</p>"
-        "<input class=\"minp\" type=\"email\" placeholder=\"your@email.com\"/>"
-        "<button class=\"mbtn\" onclick=\"subscribe()\">Subscribe for Free &#8594;</button>"
-        "<p style=\"font-size:.68rem;color:var(--tx3);margin-top:9px;text-align:center\">No spam. Unsubscribe anytime.</p>"
+        "<div id=\"modal-form\">"
+        "<div class=\"mem\">&#128240;</div>"
+        "<h2>Get the Daily Digest</h2>"
+        "<p>Join 42,000+ readers who get the top 5 stories every morning at 8am PST. Free forever.</p>"
+        "<label class=\"minp-label\" for=\"sub-name\">Your name</label>"
+        "<input class=\"minp\" id=\"sub-name\" type=\"text\" placeholder=\"First name\" autocomplete=\"given-name\" required/>"
+        "<label class=\"minp-label\" for=\"sub-email\">Email address</label>"
+        "<input class=\"minp\" id=\"sub-email\" type=\"email\" placeholder=\"you@example.com\" autocomplete=\"email\" required/>"
+        "<button class=\"mbtn\" id=\"sub-btn\" onclick=\"submitForm(event)\">Subscribe for Free &#8594;</button>"
+        "<p style=\"font-size:.68rem;color:var(--tx3);margin-top:10px;text-align:center\">No spam &middot; Unsubscribe anytime &middot; Your data is safe</p>"
+        "</div>"
+        "<div class=\"modal-success\" id=\"modal-success\">"
+        "<div class=\"ms-icon\">&#127881;</div>"
+        "<h3>You're in!</h3>"
+        "<p>Welcome to the Daily Digest family. Your first edition arrives tomorrow morning at 8am PST.</p>"
+        "<button class=\"mbtn\" onclick=\"closeModal()\" style=\"margin-top:16px\">Close</button>"
+        "</div>"
         "</div></div>\n"
         "<div class=\"toast\" id=\"toast\"></div>\n"
         "<script>" + js + "</script>\n"
